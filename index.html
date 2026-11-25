@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PBES — Professional Bowling Equipment Supply | 專業保齡球及用品專門店</title>
+  <!-- Preconnect to Google Image CDN & Apps Script for faster handshake -->
+  <link rel="preconnect" href="https://drive.google.com">
+  <link rel="preconnect" href="https://lh3.googleusercontent.com">
+  <link rel="preconnect" href="https://script.google.com">
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Plus Jakarta Sans & Noto Sans TC -->
@@ -74,6 +78,23 @@
     .animate-fade-up {
       animation: fadeUp 0.24s ease-out forwards;
     }
+    @keyframes cartPopBounce {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.25) rotate(-5deg); box-shadow: 0 0 24px rgba(56, 189, 248, 0.85); }
+      65% { transform: scale(0.92) rotate(3deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    .animate-cart-bounce {
+      animation: cartPopBounce 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes badgeBurst {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.45); background-color: #FEF08A; color: #070B14; }
+      100% { transform: scale(1); }
+    }
+    .animate-badge-burst {
+      animation: badgeBurst 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
   </style>
 </head>
 <body class="antialiased selection:bg-blue-600 selection:text-white">
@@ -94,7 +115,7 @@
         <div id="brandLogoContainer" class="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white p-1 flex items-center justify-center shadow-md overflow-hidden shrink-0">
           <img
             data-gdrive-id="1VbwSTEOmLK35IgOx9umir4iEZMhx45Qr"
-            src="https://drive.google.com/thumbnail?id=1VbwSTEOmLK35IgOx9umir4iEZMhx45Qr&sz=w400"
+            src="https://drive.google.com/thumbnail?id=1VbwSTEOmLK35IgOx9umir4iEZMhx45Qr&sz=w300"
             alt="PBES Logo"
             class="w-full h-full object-contain"
             onerror="handleSmartImgError(this)"
@@ -153,8 +174,8 @@
       <!-- Right Action Controls -->
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <button
-          onclick="syncFromGoogleSheet(true)"
-          title="立即從 Google Sheet 重新同步最新庫存與圖片"
+          onclick="syncFromGoogleSheet(true, true)"
+          title="立即從 Google Sheet 強制重新同步最新庫存與圖片"
           class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-300 hover:text-white bg-emerald-950/70 hover:bg-emerald-800/80 px-2.5 sm:px-3 py-2.5 rounded-xl border border-emerald-700/60 transition active:scale-95"
         >
           <svg id="syncBtnIcon" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,6 +192,7 @@
         </button>
 
         <button
+          id="headerCartBtn"
           onclick="toggleCartDrawer(true)"
           class="relative inline-flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-extrabold text-xs sm:text-sm px-3 sm:px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 transition active:scale-95"
         >
@@ -267,7 +289,7 @@
         <span id="offlineWarningText">目前顯示本機備援目錄資料（無法連接 Google Sheet API，請檢查網路或重新同步）。</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <button onclick="syncFromGoogleSheet(true)" class="text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg transition">
+        <button onclick="syncFromGoogleSheet(true, true)" class="text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg transition">
           重試連線
         </button>
       </div>
@@ -306,7 +328,7 @@
         </div>
 
         <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto">
-          <!-- Weight Filter (Auto-hidden on Shoes/Gear tabs) -->
+          <!-- Weight Filter -->
           <select id="weightFilter" onchange="applyFilters()" class="w-full sm:w-auto bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl px-2.5 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600">
             <option value="all">全部磅數 (12–16 lb)</option>
             <option value="12 lb">12 lb (有現貨)</option>
@@ -393,10 +415,10 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
         </div>
-        <h3 class="text-lg font-bold text-slate-900 mb-1">找不到符合篩選條件的保齡球</h3>
+        <h3 class="text-lg font-bold text-slate-900 mb-1">找不到符合篩選條件的商品</h3>
         <p class="text-sm text-slate-500 mb-4">請嘗試更改搜尋關鍵字、系列分頁或取消「只顯示有現貨」。</p>
         <button onclick="resetFilters()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition">
-          顯示全部保齡球
+          顯示最新上架商品
         </button>
       </div>
     </section>
@@ -413,20 +435,20 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Card 1: Basic Drilling Service (+$380) -->
-        <div class="ball-card rounded-2xl p-6 flex flex-col justify-between">
+        <div id="drillingCard1" class="ball-card rounded-2xl p-6 flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between gap-2 mb-3">
               <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-blue-50 text-blue-700 border border-blue-200">基本鑽孔服務</span>
               <span class="text-xl font-black text-blue-700">+$380</span>
             </div>
 
-            <!-- Google Sheet Real Images: Turbo 手指膠套 / Vise 手指膠套 / Turbo 拇指膠 (第38行) -->
             <div class="grid grid-cols-3 gap-2 mb-4 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
               <div data-acc-key="turbo 手指膠套" onclick="openAccessoryLightbox(this, '1zAXHALdc5ObGIab2pJN7039XyZ7c_Scu', 'Turbo 手指膠套 (Classic / Quad)')" class="cursor-zoom-in group/img relative bg-white rounded-lg p-1.5 border border-slate-100 hover:border-blue-300 flex flex-col items-center justify-center text-center transition">
                 <img
                   data-gdrive-id="1zAXHALdc5ObGIab2pJN7039XyZ7c_Scu"
-                  src="https://drive.google.com/thumbnail?id=1zAXHALdc5ObGIab2pJN7039XyZ7c_Scu&sz=w600"
+                  src="https://drive.google.com/thumbnail?id=1zAXHALdc5ObGIab2pJN7039XyZ7c_Scu&sz=w300"
                   alt="Turbo 手指膠套"
+                  loading="lazy"
                   class="w-16 h-16 object-contain transition-transform duration-200 group-hover/img:scale-105"
                   onerror="handleSmartImgError(this)"
                 />
@@ -440,8 +462,9 @@
               <div data-acc-key="vise 手指膠套" onclick="openAccessoryLightbox(this, '1vC47ftLbbPTPgAvamB5sIxupyug0mmX7', 'Vise 手指膠套')" class="cursor-zoom-in group/img relative bg-white rounded-lg p-1.5 border border-slate-100 hover:border-blue-300 flex flex-col items-center justify-center text-center transition">
                 <img
                   data-gdrive-id="1vC47ftLbbPTPgAvamB5sIxupyug0mmX7"
-                  src="https://drive.google.com/thumbnail?id=1vC47ftLbbPTPgAvamB5sIxupyug0mmX7&sz=w600"
+                  src="https://drive.google.com/thumbnail?id=1vC47ftLbbPTPgAvamB5sIxupyug0mmX7&sz=w300"
                   alt="Vise 手指膠套"
+                  loading="lazy"
                   class="w-16 h-16 object-contain transition-transform duration-200 group-hover/img:scale-105"
                   onerror="handleSmartImgError(this)"
                 />
@@ -455,8 +478,9 @@
               <div data-acc-key="turbo 拇指膠" onclick="openAccessoryLightbox(this, '1ZdknFI6ndOlCdeLCyB62ceiKkCXj93Wp', 'Turbo 拇指膠 (Thumb Slug)')" class="cursor-zoom-in group/img relative bg-white rounded-lg p-1.5 border border-slate-100 hover:border-blue-300 flex flex-col items-center justify-center text-center transition">
                 <img
                   data-gdrive-id="1ZdknFI6ndOlCdeLCyB62ceiKkCXj93Wp"
-                  src="https://drive.google.com/thumbnail?id=1ZdknFI6ndOlCdeLCyB62ceiKkCXj93Wp&sz=w600"
+                  src="https://drive.google.com/thumbnail?id=1ZdknFI6ndOlCdeLCyB62ceiKkCXj93Wp&sz=w300"
                   alt="Turbo 拇指膠"
+                  loading="lazy"
                   class="w-16 h-16 object-contain transition-transform duration-200 group-hover/img:scale-105"
                   onerror="handleSmartImgError(this)"
                 />
@@ -490,27 +514,27 @@
               <option value="Turbo Quad 手指膠套">配 Turbo Quad 手指膠套 + Turbo 拇指膠</option>
               <option value="Vise 手指膠套">配 Vise 手指膠套 + Turbo 拇指膠</option>
             </select>
-            <button onclick="addStandaloneDrilling()" class="w-full bg-pbes-navy hover:bg-blue-700 text-white font-bold text-xs sm:text-sm py-2.5 px-4 rounded-xl transition active:scale-95">
+            <button onclick="addStandaloneDrilling(this)" class="w-full bg-pbes-navy hover:bg-blue-700 text-white font-bold text-xs sm:text-sm py-2.5 px-4 rounded-xl transition active:scale-95">
               +$380 加入基本鑽孔服務
             </button>
           </div>
         </div>
 
         <!-- Card 2: Interchangeable Thumb OUTER (+$100) -->
-        <div class="ball-card rounded-2xl p-6 flex flex-col justify-between">
+        <div id="drillingCard2" class="ball-card rounded-2xl p-6 flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between gap-2 mb-3">
               <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">活動式拇指 · OUTER</span>
               <span class="text-xl font-black text-emerald-700">+$100</span>
             </div>
 
-            <!-- Google Sheet Real Images: Turbo Outer (第41行) & Jopo Outer (第91行) -->
             <div class="grid grid-cols-2 gap-2 mb-4 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
               <div data-acc-key="turbo outer" onclick="openAccessoryLightbox(this, '17-vPInuj3G5bH_QURNUBHnwPwI2DhXw4', 'Turbo Outer 活動式拇指外套')" class="cursor-zoom-in group/img relative bg-white rounded-lg p-2 border border-slate-100 hover:border-emerald-300 flex flex-col items-center justify-center text-center transition">
                 <img
                   data-gdrive-id="17-vPInuj3G5bH_QURNUBHnwPwI2DhXw4"
-                  src="https://drive.google.com/thumbnail?id=17-vPInuj3G5bH_QURNUBHnwPwI2DhXw4&sz=w600"
+                  src="https://drive.google.com/thumbnail?id=17-vPInuj3G5bH_QURNUBHnwPwI2DhXw4&sz=w300"
                   alt="Turbo Outer"
+                  loading="lazy"
                   class="w-20 h-16 object-contain transition-transform duration-200 group-hover/img:scale-105"
                   onerror="handleSmartImgError(this)"
                 />
@@ -525,8 +549,9 @@
               <div data-acc-key="jopo outer" onclick="openAccessoryLightbox(this, '12Oys2ih2iQ14s87bq3b0K4I-xNRDoAQr', 'Jopo Outer 活動式拇指外套')" class="cursor-zoom-in group/img relative bg-white rounded-lg p-2 border border-slate-100 hover:border-emerald-300 flex flex-col items-center justify-center text-center transition">
                 <img
                   data-gdrive-id="12Oys2ih2iQ14s87bq3b0K4I-xNRDoAQr"
-                  src="https://drive.google.com/thumbnail?id=12Oys2ih2iQ14s87bq3b0K4I-xNRDoAQr&sz=w600"
+                  src="https://drive.google.com/thumbnail?id=12Oys2ih2iQ14s87bq3b0K4I-xNRDoAQr&sz=w300"
                   alt="Jopo Outer"
+                  loading="lazy"
                   class="w-20 h-16 object-contain transition-transform duration-200 group-hover/img:scale-105"
                   onerror="handleSmartImgError(this)"
                 />
@@ -546,19 +571,19 @@
             <div class="space-y-2">
               <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
                 <span class="text-xs font-bold text-slate-800">Turbo Outer</span>
-                <button onclick="addStandaloneAccessory('活動式拇指 Outer - Turbo Outer', 100, '活動式拇指配件')" class="text-xs font-bold bg-white hover:bg-emerald-600 hover:text-white text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg transition active:scale-95">
+                <button onclick="addStandaloneAccessory('活動式拇指 Outer - Turbo Outer', 100, '活動式拇指配件', this)" class="text-xs font-bold bg-white hover:bg-emerald-600 hover:text-white text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg transition active:scale-95">
                   +$100 加入
                 </button>
               </div>
               <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
                 <span class="text-xs font-bold text-slate-800">Jopo Outer</span>
-                <button onclick="addStandaloneAccessory('活動式拇指 Outer - Jopo Outer', 100, '活動式拇指配件')" class="text-xs font-bold bg-white hover:bg-emerald-600 hover:text-white text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg transition active:scale-95">
+                <button onclick="addStandaloneAccessory('活動式拇指 Outer - Jopo Outer', 100, '活動式拇指配件', this)" class="text-xs font-bold bg-white hover:bg-emerald-600 hover:text-white text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg transition active:scale-95">
                   +$100 加入
                 </button>
               </div>
               <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
                 <span class="text-xs font-bold text-slate-800">Turbo Switch NX</span>
-                <button onclick="addStandaloneAccessory('活動式拇指 Outer - Turbo Switch NX', 100, '活動式拇指配件')" class="text-xs font-bold bg-white hover:bg-emerald-600 hover:text-white text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg transition active:scale-95">
+                <button onclick="addStandaloneAccessory('活動式拇指 Outer - Turbo Switch NX', 100, '活動式拇指配件', this)" class="text-xs font-bold bg-white hover:bg-emerald-600 hover:text-white text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg transition active:scale-95">
                   +$100 加入
                 </button>
               </div>
@@ -568,20 +593,20 @@
         </div>
 
         <!-- Card 3: Interchangeable Thumb INNER (+$300) -->
-        <div class="ball-card rounded-2xl p-6 flex flex-col justify-between">
+        <div id="drillingCard3" class="ball-card rounded-2xl p-6 flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between gap-2 mb-3">
               <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-purple-50 text-purple-700 border border-purple-200">活動式拇指 · INNER</span>
               <span class="text-xl font-black text-purple-700">+$300</span>
             </div>
 
-            <!-- Google Sheet Real Images: Turbo Inner (第93行) & Jopo Inner (第92行) -->
             <div class="grid grid-cols-2 gap-2 mb-4 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
               <div data-acc-key="turbo inner" onclick="openAccessoryLightbox(this, '18L5Izl0buExzflT7X8vE80z-lOeeNTJ6', 'Turbo Inner 活動式拇指內膽')" class="cursor-zoom-in group/img relative bg-white rounded-lg p-2 border border-slate-100 hover:border-purple-300 flex flex-col items-center justify-center text-center transition">
                 <img
                   data-gdrive-id="18L5Izl0buExzflT7X8vE80z-lOeeNTJ6"
-                  src="https://drive.google.com/thumbnail?id=18L5Izl0buExzflT7X8vE80z-lOeeNTJ6&sz=w600"
+                  src="https://drive.google.com/thumbnail?id=18L5Izl0buExzflT7X8vE80z-lOeeNTJ6&sz=w300"
                   alt="Turbo Inner"
+                  loading="lazy"
                   class="w-20 h-16 object-contain transition-transform duration-200 group-hover/img:scale-105"
                   onerror="handleSmartImgError(this)"
                 />
@@ -596,8 +621,9 @@
               <div data-acc-key="jopo inner" onclick="openAccessoryLightbox(this, '1QT83qwlBmY6hKM9toicGG0wf2YXBrwwU', 'Jopo Inner 活動式拇指內膽')" class="cursor-zoom-in group/img relative bg-white rounded-lg p-2 border border-slate-100 hover:border-purple-300 flex flex-col items-center justify-center text-center transition">
                 <img
                   data-gdrive-id="1QT83qwlBmY6hKM9toicGG0wf2YXBrwwU"
-                  src="https://drive.google.com/thumbnail?id=1QT83qwlBmY6hKM9toicGG0wf2YXBrwwU&sz=w600"
+                  src="https://drive.google.com/thumbnail?id=1QT83qwlBmY6hKM9toicGG0wf2YXBrwwU&sz=w300"
                   alt="Jopo Inner"
+                  loading="lazy"
                   class="w-20 h-16 object-contain transition-transform duration-200 group-hover/img:scale-105"
                   onerror="handleSmartImgError(this)"
                 />
@@ -620,7 +646,7 @@
                   <span class="text-xs font-bold text-slate-800 block">Turbo Inner</span>
                   <span class="text-[11px] text-slate-500">支援 Turbo Switch Grip 系統</span>
                 </div>
-                <button onclick="addStandaloneAccessory('活動式拇指 Inner - Turbo Inner', 300, '活動式拇指配件')" class="text-xs font-bold bg-white hover:bg-purple-600 hover:text-white text-purple-700 border border-purple-200 px-3 py-1.5 rounded-lg transition active:scale-95">
+                <button onclick="addStandaloneAccessory('活動式拇指 Inner - Turbo Inner', 300, '活動式拇指配件', this)" class="text-xs font-bold bg-white hover:bg-purple-600 hover:text-white text-purple-700 border border-purple-200 px-3 py-1.5 rounded-lg transition active:scale-95">
                   +$300 加入
                 </button>
               </div>
@@ -629,7 +655,7 @@
                   <span class="text-xs font-bold text-slate-800 block">Jopo Inner</span>
                   <span class="text-[11px] text-slate-500">支援 Jopo Twist 螺紋鎖定系統</span>
                 </div>
-                <button onclick="addStandaloneAccessory('活動式拇指 Inner - Jopo Inner', 300, '活動式拇指配件')" class="text-xs font-bold bg-white hover:bg-purple-600 hover:text-white text-purple-700 border border-purple-200 px-3 py-1.5 rounded-lg transition active:scale-95">
+                <button onclick="addStandaloneAccessory('活動式拇指 Inner - Jopo Inner', 300, '活動式拇指配件', this)" class="text-xs font-bold bg-white hover:bg-purple-600 hover:text-white text-purple-700 border border-purple-200 px-3 py-1.5 rounded-lg transition active:scale-95">
                   +$300 加入
                 </button>
               </div>
@@ -642,19 +668,18 @@
 
   </main>
 
-  <!-- Footer（您可直接在此區塊修改店舖地址、營業時間、Instagram、Facebook 及 WhatsApp 資料） -->
+  <!-- Footer -->
   <footer class="bg-pbes-dark text-slate-400 border-t border-slate-800 mt-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-slate-800/80">
-        
-        <!-- 左側：PBES 官方 Logo 與品牌介紹 -->
         <div class="md:col-span-5 space-y-4">
           <div class="flex items-center gap-3.5">
             <div class="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white p-1.5 flex items-center justify-center shadow-md overflow-hidden shrink-0">
               <img
                 data-gdrive-id="1VbwSTEOmLK35IgOx9umir4iEZMhx45Qr"
-                src="https://drive.google.com/thumbnail?id=1VbwSTEOmLK35IgOx9umir4iEZMhx45Qr&sz=w400"
+                src="https://drive.google.com/thumbnail?id=1VbwSTEOmLK35IgOx9umir4iEZMhx45Qr&sz=w300"
                 alt="PBES Logo"
+                loading="lazy"
                 class="w-full h-full object-contain"
                 onerror="handleSmartImgError(this)"
               />
@@ -676,7 +701,6 @@
           </p>
         </div>
 
-        <!-- 中間：店舖地址與營業時間（請直接修改下方文字） -->
         <div class="md:col-span-4 space-y-3 text-xs sm:text-sm">
           <h4 class="text-white font-extrabold tracking-wide uppercase text-xs">店舖地址及營業時間</h4>
           <ul class="space-y-2.5 text-slate-300">
@@ -695,17 +719,13 @@
           </ul>
         </div>
 
-        <!-- 右側：社交媒體連結（請直接修改 href 網址與顯示帳號名稱） -->
         <div class="md:col-span-3 space-y-3 text-xs sm:text-sm">
           <h4 class="text-white font-extrabold tracking-wide uppercase text-xs">關注我們 SOCIAL MEDIA</h4>
           <div class="flex flex-col gap-2.5">
-            <!-- Instagram 連結 -->
             <a href="https://www.instagram.com/stormbowling.h.k?exln=MXhoZmF2Zm9rZGVmNg%3D%3D" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-pink-500/50 text-slate-200 hover:text-white transition">
               <svg class="w-4 h-4 text-pink-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
               <span>Instagram: <strong>stormbowling.h.k</strong></span>
             </a>
-
-            <!-- Facebook 連結 -->
             <a href="https://www.facebook.com/people/StormRoto-Hong-Kong/61565431066219/?mibextid=wwXIfr&rdid=aOwjs713V5rZtd2X&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1FKWWJJdef%2F%3Fmibextid%3DwwXIfr" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/50 text-slate-200 hover:text-white transition">
               <svg class="w-4 h-4 text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg>
               <span>Facebook: <strong>Storm&amp;Roto - Hong Kong</strong></span>
@@ -714,7 +734,6 @@
         </div>
       </div>
 
-      <!-- 底部版權與備註列 -->
       <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
         <p>© 2026 PBES Professional Bowling Equipment Supply. All rights reserved.</p>
         <p>庫存數據與 PBES 雲端系統即時同步 · 所有保齡球售價均不包鑽工。</p>
@@ -722,10 +741,9 @@
     </div>
   </footer>
 
-  <!-- Product Customization Modal (Weight + Stock + Drilling + Interchangeable Thumb) -->
+  <!-- Product Customization Modal -->
   <div id="customModal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm overflow-y-auto">
     <div class="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 my-auto animate-fade-up">
-      <!-- Modal Header -->
       <div class="bg-pbes-navy text-white px-6 py-4 flex items-center justify-between">
         <div class="flex items-center gap-2.5">
           <span id="modalSeriesBadge" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-600 text-white">SERIES</span>
@@ -736,12 +754,9 @@
         </button>
       </div>
 
-      <!-- Modal Body -->
       <div class="p-5 sm:p-6 max-h-[82vh] overflow-y-auto space-y-5">
-        <!-- Ball Overview Box -->
         <div class="flex flex-col sm:flex-row items-center gap-5 bg-slate-50 p-4 rounded-2xl border border-slate-200/90">
           <div id="modalBallPreview" class="w-28 h-28 shrink-0 flex items-center justify-center bg-white rounded-2xl border border-slate-200/80 p-2 shadow-xs">
-            <!-- Real Image or Fallback SVG -->
           </div>
           <div class="text-center sm:text-left flex-1">
             <div id="modalClearanceTag" class="hidden inline-block text-[11px] font-extrabold bg-red-600 text-white px-2 py-0.5 rounded-md mb-1">CLEARANCE 清貨特價</div>
@@ -755,18 +770,14 @@
           </div>
         </div>
 
-        <!-- Step 1: Select Weight / Size / Spec -->
         <div>
           <div class="flex items-center justify-between mb-2.5">
             <label id="modalOptionStepLabel" class="text-sm font-extrabold text-slate-900">1. 選擇球重磅數 (Weight · 實時庫存)</label>
             <span id="weightNote" class="text-xs font-bold text-blue-600">請選擇有現貨之規格</span>
           </div>
-          <div id="modalWeightOptions" class="grid grid-cols-5 gap-2">
-            <!-- Option Buttons Injected by JS -->
-          </div>
+          <div id="modalWeightOptions" class="grid grid-cols-5 gap-2"></div>
         </div>
 
-        <!-- Quantity Selector -->
         <div class="flex items-center justify-between bg-slate-50 px-4 py-3 rounded-2xl border border-slate-200/80">
           <div>
             <span class="text-sm font-extrabold text-slate-900 block">購買數量 (Quantity)</span>
@@ -779,9 +790,7 @@
           </div>
         </div>
 
-        <!-- Ball-Only Drilling & Thumb Steps (Hidden automatically for Shoes & Gear) -->
         <div id="ballOnlyDrillingSteps" class="space-y-5">
-          <!-- Step 2: Basic Drilling Service (+$380) -->
           <div>
             <div class="flex items-center justify-between mb-2.5">
               <label class="text-sm font-extrabold text-slate-900">2. 選擇鑽孔服務 (Drilling Service)</label>
@@ -805,7 +814,6 @@
               </label>
             </div>
 
-            <!-- Grip Brand Selection -->
             <div id="gripBrandPanel" class="hidden mt-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
               <div class="text-xs font-bold text-slate-700">選擇基本鑽孔包含之手指膠套 (Grip) 款式（均含 Turbo 拇指膠）：</div>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -816,7 +824,6 @@
             </div>
           </div>
 
-          <!-- Step 3: Interchangeable Thumb Add-ons -->
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <label class="text-sm font-extrabold text-slate-900">3. 活動式拇指配件加購（選填）</label>
@@ -824,7 +831,6 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <!-- Outer (+$100) -->
               <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
                 <div class="flex justify-between items-center mb-2">
                   <span class="text-xs font-extrabold text-slate-800">Outer 外套加購</span>
@@ -838,7 +844,6 @@
                 </select>
               </div>
 
-              <!-- Inner (+$300) -->
               <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
                 <div class="flex justify-between items-center mb-2">
                   <span class="text-xs font-extrabold text-slate-800">Inner 內膽加購</span>
@@ -855,7 +860,6 @@
         </div>
       </div>
 
-      <!-- Modal Footer -->
       <div class="bg-slate-50 border-t border-slate-200 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="text-center sm:text-left">
           <div class="text-xs text-slate-500">此配置小計 (HKD)</div>
@@ -869,10 +873,9 @@
     </div>
   </div>
 
-  <!-- Slide-over Shopping Cart & Automatic Stock Deduction Checkout Drawer -->
+  <!-- Slide-over Shopping Cart Drawer -->
   <div id="cartDrawerOverlay" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm justify-end">
     <div class="bg-white w-full max-w-lg h-full flex flex-col shadow-2xl animate-slide-in">
-      <!-- Drawer Header -->
       <div class="bg-pbes-dark text-white px-6 py-4 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2.5">
           <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
@@ -883,9 +886,7 @@
         </button>
       </div>
 
-      <!-- Drawer Body -->
       <div class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-        <!-- Order Confirmation Receipt (Shown after successful POST to Google Sheet) -->
         <div id="orderReceiptCard" class="hidden bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-5 space-y-3 shadow-sm animate-fade-up">
           <div class="flex items-center gap-2 text-emerald-800 font-black text-base">
             <svg class="w-6 h-6 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -897,7 +898,6 @@
           <pre id="orderReceiptText" class="text-xs text-slate-800 bg-white p-3.5 rounded-xl border border-emerald-200 whitespace-pre-wrap font-mono leading-relaxed"></pre>
           <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
             <a href="https://wa.me/85254084120" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-800 hover:text-emerald-950 bg-emerald-100/80 hover:bg-emerald-200/80 px-3 py-2 rounded-xl border border-emerald-300 transition">
-              <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.029 18.88c-1.161 0-2.305-.292-3.318-.844l-3.677.964.984-3.595c-.607-1.052-.927-2.246-.926-3.468.001-3.825 3.113-6.937 6.937-6.937 1.856.001 3.598.723 4.907 2.034 1.31 1.311 2.031 3.054 2.03 4.908-.001 3.825-3.113 6.938-6.937 6.938z"/></svg>
               <span>WhatsApp 聯絡：54084120</span>
             </a>
             <button onclick="copyOrderReceipt()" class="text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-xl transition">
@@ -906,12 +906,8 @@
           </div>
         </div>
 
-        <!-- Cart Items Container -->
-        <div id="cartItemsList" class="space-y-3">
-          <!-- Cart Items Rendered by JS -->
-        </div>
+        <div id="cartItemsList" class="space-y-3"></div>
 
-        <!-- Customer Checkout Form -->
         <div id="checkoutFormSection" class="hidden pt-4 border-t border-slate-200 space-y-4">
           <div>
             <h4 class="text-sm font-black text-slate-900">顧客聯絡資料</h4>
@@ -932,13 +928,12 @@
               <textarea id="custNote" rows="2" placeholder="例如：右手球員，預約本週六下午 3 點到球會度手鑽孔..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"></textarea>
             </div>
 
-            <!-- Payment Method Selection -->
             <div class="pt-1">
               <label class="block text-xs font-bold text-slate-700 mb-2">付款方式 <span class="text-red-500">*</span></label>
               <div id="paymentMethodGrid" class="grid grid-cols-2 gap-2.5">
                 <button type="button" onclick="selectPaymentMethod('VISA')" data-pay="VISA" data-acc-key="visa" class="pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-blue-600 bg-blue-50/70 text-slate-900 font-extrabold text-xs transition text-left">
                   <div class="w-9 h-7 rounded-lg bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden">
-                    <img data-gdrive-id="1Ph7LVDFzkFEW4Wm6mo6I_9IP2R9Zey6G" src="https://drive.google.com/thumbnail?id=1Ph7LVDFzkFEW4Wm6mo6I_9IP2R9Zey6G&sz=w300" alt="VISA" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
+                    <img data-gdrive-id="1Ph7LVDFzkFEW4Wm6mo6I_9IP2R9Zey6G" src="https://drive.google.com/thumbnail?id=1Ph7LVDFzkFEW4Wm6mo6I_9IP2R9Zey6G&sz=w200" alt="VISA" loading="lazy" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
                     <span class="hidden fallback-graphic text-[10px] font-black text-blue-900">VISA</span>
                   </div>
                   <span>VISA</span>
@@ -946,7 +941,7 @@
 
                 <button type="button" onclick="selectPaymentMethod('Mastercard')" data-pay="Mastercard" data-acc-key="mastercard" class="pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 text-slate-800 font-extrabold text-xs transition text-left">
                   <div class="w-9 h-7 rounded-lg bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden">
-                    <img data-gdrive-id="12jwH9Y0d2S6Jf-e-J1leiJR3w-JuAYhG" src="https://drive.google.com/thumbnail?id=12jwH9Y0d2S6Jf-e-J1leiJR3w-JuAYhG&sz=w300" alt="Mastercard" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
+                    <img data-gdrive-id="12jwH9Y0d2S6Jf-e-J1leiJR3w-JuAYhG" src="https://drive.google.com/thumbnail?id=12jwH9Y0d2S6Jf-e-J1leiJR3w-JuAYhG&sz=w200" alt="Mastercard" loading="lazy" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
                     <span class="hidden fallback-graphic text-[9px] font-black text-orange-600">MC</span>
                   </div>
                   <span>Mastercard</span>
@@ -954,7 +949,7 @@
 
                 <button type="button" onclick="selectPaymentMethod('PayMe')" data-pay="PayMe" data-acc-key="payme" class="pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 text-slate-800 font-extrabold text-xs transition text-left">
                   <div class="w-9 h-7 rounded-lg bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden">
-                    <img data-gdrive-id="1p0OQPusMr85KXnRcbV86F8WjmSRGIRbN" src="https://drive.google.com/thumbnail?id=1p0OQPusMr85KXnRcbV86F8WjmSRGIRbN&sz=w300" alt="PayMe" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
+                    <img data-gdrive-id="1p0OQPusMr85KXnRcbV86F8WjmSRGIRbN" src="https://drive.google.com/thumbnail?id=1p0OQPusMr85KXnRcbV86F8WjmSRGIRbN&sz=w200" alt="PayMe" loading="lazy" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
                     <span class="hidden fallback-graphic text-[9px] font-black text-red-600">PayMe</span>
                   </div>
                   <span>PayMe</span>
@@ -962,7 +957,7 @@
 
                 <button type="button" onclick="selectPaymentMethod('轉數快')" data-pay="轉數快" data-acc-key="轉數快" class="pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 text-slate-800 font-extrabold text-xs transition text-left">
                   <div class="w-9 h-7 rounded-lg bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden">
-                    <img data-gdrive-id="1i3pfp7rxbegZTexXsuAD7lqdFJBL30MO" src="https://drive.google.com/thumbnail?id=1i3pfp7rxbegZTexXsuAD7lqdFJBL30MO&sz=w300" alt="轉數快" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
+                    <img data-gdrive-id="1i3pfp7rxbegZTexXsuAD7lqdFJBL30MO" src="https://drive.google.com/thumbnail?id=1i3pfp7rxbegZTexXsuAD7lqdFJBL30MO&sz=w200" alt="轉數快" loading="lazy" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
                     <span class="hidden fallback-graphic text-[9px] font-black text-sky-600">FPS</span>
                   </div>
                   <span>轉數快</span>
@@ -973,7 +968,6 @@
         </div>
       </div>
 
-      <!-- Drawer Footer -->
       <div id="cartDrawerFooter" class="hidden bg-slate-50 border-t border-slate-200 p-5 shrink-0 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-sm font-bold text-slate-600">訂單總金額 (HKD)</span>
@@ -1017,17 +1011,9 @@
     // =========================================================================
     const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUGIhQrrCN-4bY2uCbYqJXRdchrSeDGKe9PTfEepfvdDix-gdTmHqBZwhUCYdKOFsHLg/exec';
     const STORAGE_KEY_URL = 'pbes_apps_script_url_v3';
+    const LOCAL_CATALOG_CACHE_KEY = 'pbes_cached_catalog_v2';
 
     const WEIGHT_KEYS = ['12 lb', '13 lb', '14 lb', '15 lb', '16 lb'];
-
-    const BALL_SERIES_IDS = [
-      'OEM Release',
-      'Premier / SPI LAB',
-      'Master / HP3',
-      'Thunder / HP2',
-      'Clear / Mix / Ice',
-      'Clearance'
-    ];
 
     const MAIN_TABS = [
       { id: 'latest10', label: '全部商品（最新 10 款）' },
@@ -1072,8 +1058,8 @@
     // 2. APPLICATION STATE
     // =========================================================================
     let products = [];
-    let currentMainTab = 'latest10'; // 'latest10' | 'balls' | 'shoes' | 'gear'
-    let currentCategory = 'all';     // sub-series when currentMainTab === 'balls'
+    let currentMainTab = 'latest10';
+    let currentCategory = 'all';
     let searchQuery = '';
     let isCloudConnected = false;
 
@@ -1087,27 +1073,13 @@
     let cart = [];
 
     // =========================================================================
-    // 3. THREE-TIER SMART IMAGE ENGINE (SOLVES LOCAL file:// & DRIVE BLOCKS)
+    // 3. FAST CDN-FIRST IMAGE ENGINE (NO CONGESTION, ON-DEMAND FALLBACK ONLY)
     // =========================================================================
-    const PBES_LOGO_FILE_ID = '1VbwSTEOmLK35IgOx9umir4iEZMhx45Qr';
-    const ACCESSORY_FILE_IDS = [
-      '1zAXHALdc5ObGIab2pJN7039XyZ7c_Scu',
-      '1vC47ftLbbPTPgAvamB5sIxupyug0mmX7',
-      '1ZdknFI6ndOlCdeLCyB62ceiKkCXj93Wp',
-      '17-vPInuj3G5bH_QURNUBHnwPwI2DhXw4',
-      '12Oys2ih2iQ14s87bq3b0K4I-xNRDoAQr',
-      '18L5Izl0buExzflT7X8vE80z-lOeeNTJ6',
-      '1QT83qwlBmY6hKM9toicGG0wf2YXBrwwU',
-      '1Ph7LVDFzkFEW4Wm6mo6I_9IP2R9Zey6G',
-      '12jwH9Y0d2S6Jf-e-J1leiJR3w-JuAYhG',
-      '1p0OQPusMr85KXnRcbV86F8WjmSRGIRbN',
-      '1i3pfp7rxbegZTexXsuAD7lqdFJBL30MO'
-    ];
     const imageBase64Cache = new Map();
     const imageFetchQueue = [];
     const queuedFileIds = new Set();
     let activeProxyWorkers = 0;
-    const MAX_PROXY_CONCURRENCY = 5;
+    const MAX_PROXY_CONCURRENCY = 2; // 嚴格限制最多 2 條備援通道，絕不阻塞商品資料連線
 
     function getAppsScriptUrl() {
       const saved = localStorage.getItem(STORAGE_KEY_URL);
@@ -1129,7 +1101,7 @@
       return '';
     }
 
-    function normalizeImageUrl(rawUrl) {
+    function normalizeImageUrl(rawUrl, size = 360) {
       if (!rawUrl) return '';
       const trimmed = String(rawUrl).trim();
       if (!trimmed) return '';
@@ -1138,8 +1110,15 @@
         if (imageBase64Cache.has(fileId)) {
           return imageBase64Cache.get(fileId);
         }
-        // On local file:// protocol, Google Drive blocks direct image hotlinking; start with thumbnail & immediately queue Apps Script Base64 proxy
-        return `https://drive.google.com/thumbnail?id=${fileId}&sz=w600`;
+        try {
+          const hit = sessionStorage.getItem(`pbes_img_b64_${fileId}`);
+          if (hit && hit.startsWith('data:image/')) {
+            imageBase64Cache.set(fileId, hit);
+            return hit;
+          }
+        } catch (e) {}
+        // 使用 w360 輕量縮圖網址，載入體積減少 80%，毫秒級完成顯示
+        return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${size}`;
       }
       return trimmed;
     }
@@ -1175,15 +1154,13 @@
               imageBase64Cache.set(fileId, data.dataUrl);
               try {
                 sessionStorage.setItem(cachedStorageKey, data.dataUrl);
-              } catch (storageErr) {
-                // Ignore sessionStorage quota overflow
-              }
+              } catch (storageErr) {}
               applyCachedImageToDom(fileId, data.dataUrl);
             }
           }
         }
       } catch (err) {
-        console.warn('Apps Script Image Proxy error for:', fileId, err);
+        console.warn('Apps Script Image Proxy fallback error for:', fileId);
       } finally {
         queuedFileIds.delete(fileId);
         activeProxyWorkers--;
@@ -1201,6 +1178,7 @@
       });
     }
 
+    // 只有當瀏覽器原生 CDN 載入失敗時，才啟動下一層 CDN 或 Apps Script 代理
     function handleSmartImgError(imgEl) {
       const fileId = imgEl.getAttribute('data-gdrive-id');
       const retryStage = Number(imgEl.getAttribute('data-retry-stage') || '0');
@@ -1210,17 +1188,14 @@
           imgEl.src = imageBase64Cache.get(fileId);
           return;
         }
-        // 啟動 Apps Script Base64 代理並依序嘗試 Google Drive 三種不同圖片端點
-        enqueueDriveImageProxy(fileId);
         if (retryStage === 0) {
           imgEl.setAttribute('data-retry-stage', '1');
-          imgEl.src = `https://drive.google.com/uc?export=view&id=${fileId}`;
+          imgEl.src = `https://lh3.googleusercontent.com/d/${fileId}=w400`;
           return;
         }
         if (retryStage === 1) {
           imgEl.setAttribute('data-retry-stage', '2');
-          imgEl.src = `https://lh3.googleusercontent.com/d/${fileId}=w800`;
-          return;
+          enqueueDriveImageProxy(fileId);
         }
       }
 
@@ -1254,12 +1229,11 @@
       if (fileId) {
         imgEl.setAttribute('data-gdrive-id', fileId);
         imgEl.removeAttribute('data-retry-stage');
-        // 優先使用快取的高清 Base64；若尚未快取，先用穩定縮圖網址並立即啟動 Apps Script 代理抓原圖
         if (imageBase64Cache.has(fileId)) {
           imgEl.src = imageBase64Cache.get(fileId);
         } else {
-          imgEl.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`;
-          enqueueDriveImageProxy(fileId);
+          // 放大檢視時才載入高清 w1000 圖片
+          imgEl.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
         }
       } else {
         imgEl.removeAttribute('data-gdrive-id');
@@ -1311,18 +1285,13 @@
       `;
     }
 
-    function renderBallMedia(ball, sizeClass = 'w-28 h-28') {
+    function renderBallMedia(ball, sizeClass = 'w-28 h-28', imgSize = 360) {
       const fileId = extractGoogleDriveFileId(ball.imageUrl);
-      const cleanUrl = normalizeImageUrl(ball.imageUrl);
+      const cleanUrl = normalizeImageUrl(ball.imageUrl, imgSize);
       const fallbackSvg = buildSvgBallMarkup(ball, sizeClass);
 
       if (!cleanUrl) {
         return fallbackSvg;
-      }
-
-      // If running via local file:// protocol, pre-queue Apps Script Base64 proxy immediately for guaranteed display
-      if (fileId && window.location.protocol === 'file:') {
-        enqueueDriveImageProxy(fileId);
       }
 
       return `
@@ -1332,6 +1301,7 @@
             ${fileId ? `data-gdrive-id="${fileId}"` : ''}
             alt="${ball.name}"
             loading="lazy"
+            decoding="async"
             class="w-full h-full object-contain rounded-full drop-shadow-md transition-transform duration-300 group-hover:scale-105"
             onerror="handleSmartImgError(this)"
           />
@@ -1353,25 +1323,110 @@
     }
 
     // =========================================================================
-    // 4. GOOGLE SHEET SYNC (GET)
+    // 4. INSTANT LOCAL CACHE + CLOUD SYNC (STALE-WHILE-REVALIDATE)
     // =========================================================================
-    async function syncFromGoogleSheet(showManualToast = false) {
+    function applyCatalogPayload(json) {
+      if (!json || json.status !== 'ok' || !Array.isArray(json.products)) return false;
+
+      products = json.products.map((p, idx) => {
+        const seriesName = String(p.series || '').trim();
+        let pType = 'ball';
+        if (seriesName === '保齡球鞋' || String(p.productType || '') === 'shoe') {
+          pType = 'shoe';
+        } else if (seriesName === '保齡球器材' || String(p.productType || '') === 'gear') {
+          pType = 'gear';
+        }
+
+        const stockObj = {};
+        if (p.stock && typeof p.stock === 'object') {
+          Object.keys(p.stock).forEach(k => {
+            let normKey = String(k).trim();
+            const lbMatch = normKey.match(/^(1[2-6])\s*lb$/i);
+            if (lbMatch) {
+              normKey = `${lbMatch[1]} lb`;
+            }
+            stockObj[normKey] = Number(p.stock[k] || 0);
+          });
+        }
+
+        return {
+          id: String(p.id),
+          productType: pType,
+          series: seriesName,
+          name: String(p.name || '').trim(),
+          price: Number(p.price || 0),
+          imageUrl: String(p.imageUrl || ''),
+          rowOrder: Number(p.rowOrder || (idx + 1)),
+          stock: stockObj
+        };
+      });
+
+      if (json.imageLinks && typeof json.imageLinks === 'object') {
+        document.querySelectorAll('[data-acc-key]').forEach(box => {
+          const key = box.getAttribute('data-acc-key');
+          const matchedUrl = json.imageLinks[key];
+          if (matchedUrl) {
+            const newId = extractGoogleDriveFileId(matchedUrl);
+            const img = box.querySelector('img');
+            if (newId && img && img.getAttribute('data-gdrive-id') !== newId) {
+              img.setAttribute('data-gdrive-id', newId);
+              img.removeAttribute('data-retry-stage');
+              img.style.display = 'block';
+              img.src = `https://drive.google.com/thumbnail?id=${newId}&sz=w300`;
+              const fb = box.querySelector('.fallback-graphic');
+              if (fb) fb.style.display = 'none';
+            }
+          }
+        });
+      }
+
+      document.getElementById('loadingSkeletonGrid').classList.add('hidden');
+      document.getElementById('catalogSection').classList.remove('hidden');
+      renderCategoryTabs();
+      applyFilters();
+      return true;
+    }
+
+    function hydrateFromLocalCacheFirst() {
+      try {
+        const rawCached = localStorage.getItem(LOCAL_CATALOG_CACHE_KEY);
+        if (!rawCached) return false;
+        const parsed = JSON.parse(rawCached);
+        if (parsed && parsed.data && applyCatalogPayload(parsed.data)) {
+          const statusBadge = document.getElementById('syncStatusBadge');
+          if (statusBadge) {
+            statusBadge.className = 'flex items-center gap-1.5 text-[11px] text-sky-300 font-bold leading-tight mt-0.5';
+            statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span><span>秒開快取已載入 (${products.length} 款) · 背景同步最新庫存中...</span>`;
+          }
+          return true;
+        }
+      } catch (e) {
+        console.warn('Local cache read skipped:', e);
+      }
+      return false;
+    }
+
+    async function syncFromGoogleSheet(showManualToast = false, forceBypassCache = false) {
       const apiUrl = getAppsScriptUrl();
       const statusBadge = document.getElementById('syncStatusBadge');
       const syncIcon = document.getElementById('syncBtnIcon');
       const warningBanner = document.getElementById('offlineWarningBanner');
 
       if (syncIcon) syncIcon.classList.add('animate-spin');
-      if (statusBadge) {
+      if (statusBadge && products.length === 0) {
         statusBadge.className = 'flex items-center gap-1.5 text-[11px] text-amber-300 font-semibold leading-tight mt-0.5';
         statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span><span>正在同步 PBES 雲端庫存...</span>`;
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), 14000);
 
       try {
-        const res = await fetch(`${apiUrl}?t=${Date.now()}`, {
+        const queryUrl = forceBypassCache
+          ? `${apiUrl}?force=1&t=${Date.now()}`
+          : `${apiUrl}?v=1`;
+
+        const res = await fetch(queryUrl, {
           method: 'GET',
           redirect: 'follow',
           signal: controller.signal
@@ -1381,73 +1436,24 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
 
-        if (json && json.status === 'ok' && Array.isArray(json.products)) {
-          products = json.products.map((p, idx) => {
-            const seriesName = String(p.series || '').trim();
-            let pType = 'ball';
-            if (seriesName === '保齡球鞋' || String(p.productType || '') === 'shoe') {
-              pType = 'shoe';
-            } else if (seriesName === '保齡球器材' || String(p.productType || '') === 'gear') {
-              pType = 'gear';
-            }
-
-            const stockObj = {};
-            if (p.stock && typeof p.stock === 'object') {
-              Object.keys(p.stock).forEach(k => {
-                let normKey = String(k).trim();
-                // 自動統一將 12lb / 13lb / 14lb / 15lb / 16lb 轉換為標準格式 '12 lb' ~ '16 lb'
-                const lbMatch = normKey.match(/^(1[2-6])\s*lb$/i);
-                if (lbMatch) {
-                  normKey = `${lbMatch[1]} lb`;
-                }
-                stockObj[normKey] = Number(p.stock[k] || 0);
-              });
-            }
-
-            return {
-              id: String(p.id),
-              productType: pType,
-              series: seriesName,
-              name: String(p.name || '').trim(),
-              price: Number(p.price || 0),
-              imageUrl: String(p.imageUrl || ''),
-              rowOrder: Number(p.rowOrder || (idx + 1)),
-              stock: stockObj
-            };
-          });
-
+        if (applyCatalogPayload(json)) {
           isCloudConnected = true;
           if (warningBanner) warningBanner.classList.add('hidden');
 
-          const nowStr = new Date().toLocaleTimeString('zh-HK', { hour12: false });
+          try {
+            localStorage.setItem(LOCAL_CATALOG_CACHE_KEY, JSON.stringify({
+              savedAt: Date.now(),
+              data: json
+            }));
+          } catch (storageErr) {}
+
           if (statusBadge) {
             statusBadge.className = 'flex items-center gap-1.5 text-[11px] text-emerald-400 font-bold leading-tight mt-0.5';
             statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>已連線至 PBES 雲端庫存 · 共 ${products.length} 款商品</span>`;
           }
 
           if (showManualToast) {
-            showToast(`已成功從 Google Sheet 同步最新庫存（共 ${products.length} 款球）！`);
-          }
-
-          // 若後端有回傳 Image_Links 最新對照表，自動更新下方配件實物圖的最新檔案 ID
-          if (json.imageLinks && typeof json.imageLinks === 'object') {
-            document.querySelectorAll('[data-acc-key]').forEach(box => {
-              const key = box.getAttribute('data-acc-key');
-              const matchedUrl = json.imageLinks[key];
-              if (matchedUrl) {
-                const newId = extractGoogleDriveFileId(matchedUrl);
-                const img = box.querySelector('img');
-                if (newId && img && img.getAttribute('data-gdrive-id') !== newId) {
-                  img.setAttribute('data-gdrive-id', newId);
-                  img.removeAttribute('data-retry-stage');
-                  img.style.display = 'block';
-                  img.src = `https://drive.google.com/thumbnail?id=${newId}&sz=w600`;
-                  const fb = box.querySelector('.fallback-graphic');
-                  if (fb) fb.style.display = 'none';
-                  enqueueDriveImageProxy(newId);
-                }
-              }
-            });
+            showToast(`已成功從 Google Sheet 同步最新庫存（共 ${products.length} 款商品）！`);
           }
         } else {
           throw new Error((json && json.message) || '回傳資料格式異常');
@@ -1458,21 +1464,21 @@
         isCloudConnected = false;
         if (products.length === 0) {
           products = JSON.parse(JSON.stringify(FALLBACK_PRODUCTS));
+          document.getElementById('loadingSkeletonGrid').classList.add('hidden');
+          document.getElementById('catalogSection').classList.remove('hidden');
+          renderCategoryTabs();
+          applyFilters();
         }
         if (warningBanner) {
           warningBanner.classList.remove('hidden');
-          document.getElementById('offlineWarningText').textContent = `目前顯示備援目錄資料（連線異常：${err.name === 'AbortError' ? '連線逾時' : err.message}）。`;
+          document.getElementById('offlineWarningText').textContent = `目前顯示本機快取/備援目錄資料（連線異常：${err.name === 'AbortError' ? '連線逾時' : err.message}）。`;
         }
         if (statusBadge) {
           statusBadge.className = 'flex items-center gap-1.5 text-[11px] text-amber-400 font-bold leading-tight mt-0.5';
-          statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>離線備援模式 (${products.length} 款)</span>`;
+          statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>本機快取模式 (${products.length} 款)</span>`;
         }
       } finally {
         if (syncIcon) syncIcon.classList.remove('animate-spin');
-        document.getElementById('loadingSkeletonGrid').classList.add('hidden');
-        document.getElementById('catalogSection').classList.remove('hidden');
-        renderCategoryTabs();
-        applyFilters();
       }
     }
 
@@ -1498,7 +1504,6 @@
     }
 
     function getLatestTenProducts() {
-      // Latest uploaded items sit at the bottom of each sheet (highest rowOrder)
       return [...products]
         .sort((a, b) => (b.rowOrder || 0) - (a.rowOrder || 0))
         .slice(0, 10);
@@ -1542,7 +1547,6 @@
         }).join('');
       }
 
-      // Show sub-series tabs only on "保齡球" tab
       if (subContainerWrap && subContainer) {
         if (currentMainTab === 'balls') {
           subContainerWrap.classList.remove('hidden');
@@ -1580,7 +1584,6 @@
         }
       }
 
-      // Show 12-16lb weight filter only on latest10 or balls tab
       if (weightSelect) {
         if (currentMainTab === 'shoes' || currentMainTab === 'gear') {
           weightSelect.classList.add('hidden');
@@ -1719,7 +1722,7 @@
               : '選擇規格及加入購物車';
 
         return `
-          <div class="ball-card rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between group relative overflow-hidden">
+          <div data-product-id="${item.id}" class="ball-card rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between group relative overflow-hidden">
             <div>
               <div class="flex flex-wrap items-center justify-between gap-1 mb-2.5 sm:mb-3">
                 <span class="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg truncate max-w-[65%] ${typeBadgeBg}">
@@ -1733,7 +1736,7 @@
               </div>
 
               <div onclick="openCustomModal('${item.id}')" class="cursor-pointer py-2.5 sm:py-3 px-2 rounded-xl bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-100 mb-3 sm:mb-3.5 flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
-                ${renderBallMedia(item, 'w-22 h-22 sm:w-28 sm:h-28')}
+                ${renderBallMedia(item, 'w-22 h-22 sm:w-28 sm:h-28', 360)}
               </div>
 
               <h3 onclick="openCustomModal('${item.id}')" class="cursor-pointer text-sm sm:text-lg font-black text-slate-900 group-hover:text-blue-600 transition line-clamp-1" title="${item.name}">
@@ -1771,7 +1774,7 @@
     }
 
     // =========================================================================
-    // 6. PRODUCT CUSTOMIZATION MODAL LOGIC (BALLS / SHOES / GEAR)
+    // 6. PRODUCT CUSTOMIZATION MODAL LOGIC
     // =========================================================================
     function openCustomModal(itemId) {
       const item = products.find(p => p.id === itemId);
@@ -1794,7 +1797,7 @@
       document.getElementById('modalBallName').textContent = item.name;
       document.getElementById('modalBallDesc').textContent = SERIES_DESCRIPTIONS[item.series] || 'PBES 專業保齡球及用品目錄型號';
       document.getElementById('modalBasePrice').textContent = `$${item.price.toLocaleString()}`;
-      document.getElementById('modalBallPreview').innerHTML = renderBallMedia(item, 'w-24 h-24');
+      document.getElementById('modalBallPreview').innerHTML = renderBallMedia(item, 'w-24 h-24', 500);
 
       const noDrillHint = document.getElementById('modalNoDrillHint');
       const drillingSteps = document.getElementById('ballOnlyDrillingSteps');
@@ -2001,65 +2004,162 @@
         addonsText = `${activeBall.series} · 規格：${selectedWeight}`;
       }
 
-      const configKey = `${activeBall.id}__${selectedWeight}__${addonsText}`;
+      const itemSnapshot = {
+        id: activeBall.id,
+        series: activeBall.series,
+        name: activeBall.name,
+        weight: selectedWeight,
+        unitPrice,
+        qty: modalQty,
+        addonsText,
+        isAddonOnly: false
+      };
 
-      const existing = cart.find(c => c.configKey === configKey);
-      if (existing) {
-        existing.qty += modalQty;
-      } else {
-        cart.push({
-          configKey,
-          id: activeBall.id,
-          series: activeBall.series,
-          name: activeBall.name,
-          weight: selectedWeight,
-          unitPrice,
-          qty: modalQty,
-          addonsText,
-          isAddonOnly: false
-        });
-      }
+      const configKey = `${itemSnapshot.id}__${itemSnapshot.weight}__${itemSnapshot.addonsText}`;
+      const modalPreviewEl = document.getElementById('modalBallPreview');
+      const gridCardEl = document.querySelector(`[data-product-id="${itemSnapshot.id}"]`);
+      const sourceEl = (modalPreviewEl && modalPreviewEl.getBoundingClientRect().width > 0) ? modalPreviewEl : gridCardEl;
 
-      updateCartUI();
+      triggerFlyToCartAnimation(sourceEl, itemSnapshot.name, () => {
+        const existing = cart.find(c => c.configKey === configKey);
+        if (existing) {
+          existing.qty += itemSnapshot.qty;
+        } else {
+          cart.push({
+            configKey,
+            ...itemSnapshot
+          });
+        }
+        updateCartUI();
+        showToast(`已將 ${itemSnapshot.name} (${itemSnapshot.weight}) x${itemSnapshot.qty} 加入購物車`);
+      });
+
       closeCustomModal();
-      showToast(`已將 ${activeBall.name} (${selectedWeight}) x${modalQty} 加入購物車`);
     }
 
     // =========================================================================
-    // 7. STANDALONE DRILLING & ACCESSORIES
+    // 7. STANDALONE DRILLING & ACCESSORIES + FLY-TO-CART ANIMATION
     // =========================================================================
-    function addStandaloneDrilling() {
-      const grip = document.getElementById('standaloneGripBrand').value;
-      addStandaloneAccessory(`基本保齡球鑽孔服務 (${grip} + Turbo 拇指膠)`, 380, '鑽孔服務');
-    }
-
-    function addStandaloneAccessory(name, price, categoryLabel) {
-      const configKey = `addon__${name}`;
-      const existing = cart.find(c => c.configKey === configKey);
-      if (existing) {
-        existing.qty += 1;
-      } else {
-        cart.push({
-          configKey,
-          id: 'SERVICE',
-          series: categoryLabel,
-          name,
-          weight: '—',
-          unitPrice: price,
-          qty: 1,
-          addonsText: '獨立服務 / 配件加購',
-          isAddonOnly: true
-        });
+    function triggerFlyToCartAnimation(sourceEl, itemLabel, onComplete) {
+      const cartBtn = document.getElementById('headerCartBtn');
+      const cartBadge = document.getElementById('cartBadge');
+      if (!sourceEl || !cartBtn) {
+        if (onComplete) onComplete();
+        return;
       }
-      updateCartUI();
-      showToast(`已將「${name}」加入購物車`);
+
+      const startRect = sourceEl.getBoundingClientRect();
+      const endRect = cartBtn.getBoundingClientRect();
+
+      const startX = startRect.left + startRect.width / 2;
+      const startY = startRect.top + startRect.height / 2;
+      const endX = endRect.left + endRect.width / 2;
+      const endY = endRect.top + endRect.height / 2;
+
+      // 建立帶有藍金色外框與發光效果的飛行貨品縮圖
+      const flyer = document.createElement('div');
+      flyer.style.position = 'fixed';
+      flyer.style.left = `${startX - 44}px`;
+      flyer.style.top = `${startY - 44}px`;
+      flyer.style.width = '88px';
+      flyer.style.height = '88px';
+      flyer.style.zIndex = '99999';
+      flyer.style.pointerEvents = 'none';
+      flyer.style.borderRadius = '9999px';
+      flyer.style.padding = '5px';
+      flyer.style.background = 'linear-gradient(135deg, #38BDF8, #2563EB, #F59E0B)';
+      flyer.style.boxShadow = '0 16px 36px rgba(37, 99, 235, 0.55), 0 0 22px rgba(56, 189, 248, 0.85)';
+      flyer.style.display = 'flex';
+      flyer.style.alignItems = 'center';
+      flyer.style.justifyContent = 'center';
+      flyer.style.willChange = 'transform, opacity';
+
+      const sourceImg = sourceEl.querySelector('img');
+      if (sourceImg && sourceImg.src && sourceImg.style.display !== 'none') {
+        const cloneImg = document.createElement('img');
+        cloneImg.src = sourceImg.src;
+        cloneImg.style.width = '100%';
+        cloneImg.style.height = '100%';
+        cloneImg.style.objectFit = 'contain';
+        cloneImg.style.borderRadius = '9999px';
+        cloneImg.style.background = '#FFFFFF';
+        flyer.appendChild(cloneImg);
+      } else {
+        const shortText = String(itemLabel || 'PBES').slice(0, 8);
+        flyer.innerHTML = `<div style="width:100%;height:100%;border-radius:9999px;background:#0D1526;color:#38BDF8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:900;text-align:center;padding:4px;"><span>PBES</span><span style="margin-top:2px;font-size:9px;color:#FBBF24;">${shortText}</span></div>`;
+      }
+
+      document.body.appendChild(flyer);
+
+      // 拋物線弧頂控制點
+      const deltaX = endX - startX;
+      const deltaY = endY - startY;
+      const arcPeakY = Math.min(deltaY * 0.45 - 105, -80);
+
+      const anim = flyer.animate([
+        { transform: 'translate3d(0px, 0px, 0) scale(1.1) rotate(0deg)', opacity: 1 },
+        { transform: `translate3d(${deltaX * 0.45}px, ${arcPeakY}px, 0) scale(0.8) rotate(-14deg)`, opacity: 0.98, offset: 0.5 },
+        { transform: `translate3d(${deltaX}px, ${deltaY}px, 0) scale(0.22) rotate(18deg)`, opacity: 0.25 }
+      ], {
+        duration: 680,
+        easing: 'cubic-bezier(0.22, 0.85, 0.36, 1)',
+        fill: 'forwards'
+      });
+
+      anim.onfinish = () => {
+        flyer.remove();
+        // 觸發右上角購物車按鈕與數量徽章彈跳高光動畫
+        cartBtn.classList.remove('animate-cart-bounce');
+        void cartBtn.offsetWidth;
+        cartBtn.classList.add('animate-cart-bounce');
+
+        if (cartBadge) {
+          cartBadge.classList.remove('animate-badge-burst');
+          void cartBadge.offsetWidth;
+          cartBadge.classList.add('animate-badge-burst');
+        }
+        if (onComplete) onComplete();
+      };
+    }
+
+    function addStandaloneDrilling(triggerBtn) {
+      const grip = document.getElementById('standaloneGripBrand').value;
+      addStandaloneAccessory(`基本保齡球鑽孔服務 (${grip} + Turbo 拇指膠)`, 380, '鑽孔服務', triggerBtn);
+    }
+
+    function addStandaloneAccessory(name, price, categoryLabel, triggerBtn) {
+      const cardEl = triggerBtn ? triggerBtn.closest('.ball-card') : null;
+      const sourceEl = cardEl || triggerBtn;
+
+      triggerFlyToCartAnimation(sourceEl, name, () => {
+        const configKey = `addon__${name}`;
+        const existing = cart.find(c => c.configKey === configKey);
+        if (existing) {
+          existing.qty += 1;
+        } else {
+          cart.push({
+            configKey,
+            id: 'SERVICE',
+            series: categoryLabel,
+            name,
+            weight: '—',
+            unitPrice: price,
+            qty: 1,
+            addonsText: '獨立服務 / 配件加購',
+            isAddonOnly: true
+          });
+        }
+        updateCartUI();
+        showToast(`已將「${name}」加入購物車`);
+      });
     }
 
     // =========================================================================
-    // 8. SHOPPING CART DRAWER & AUTOMATIC GOOGLE SHEET POST CHECKOUT
+    // 8. SHOPPING CART DRAWER, BADGE COUNTER & CHECKOUT
     // =========================================================================
     function toggleCartDrawer(open) {
       const overlay = document.getElementById('cartDrawerOverlay');
+      if (!overlay) return;
       if (open) {
         overlay.classList.remove('hidden');
         overlay.classList.add('flex');
@@ -2071,74 +2171,82 @@
     }
 
     function updateCartUI() {
-      const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-      document.getElementById('cartBadge').textContent = String(totalItems);
+      const totalItemsCount = cart.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
+      const badgeEl = document.getElementById('cartBadge');
+      if (badgeEl) {
+        badgeEl.textContent = String(totalItemsCount);
+      }
 
       const listEl = document.getElementById('cartItemsList');
       const formSec = document.getElementById('checkoutFormSection');
       const footerEl = document.getElementById('cartDrawerFooter');
+      const totalAmountEl = document.getElementById('cartTotalAmount');
+
+      if (!listEl || !formSec || !footerEl) return;
 
       if (cart.length === 0) {
         listEl.innerHTML = `
           <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-            <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+            <svg class="w-10 h-10 text-slate-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
             <p class="text-sm font-bold text-slate-600">購物車目前是空的</p>
-            <p class="text-xs text-slate-400 mt-1">請從目錄挑選心儀保齡球或鑽孔配件</p>
+            <p class="text-xs text-slate-400 mt-1">請從目錄選購心儀的保齡球、球鞋或加購鑽孔服務</p>
           </div>
         `;
         formSec.classList.add('hidden');
         footerEl.classList.add('hidden');
+        if (totalAmountEl) totalAmountEl.textContent = '$0';
         return;
       }
 
       formSec.classList.remove('hidden');
       footerEl.classList.remove('hidden');
 
-      let grandTotal = 0;
+      let totalAmount = 0;
       listEl.innerHTML = cart.map((item, idx) => {
-        const sub = item.unitPrice * item.qty;
-        grandTotal += sub;
-        return `
-          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/90 space-y-2">
-            <div class="flex items-start justify-between gap-2">
-              <div>
-                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-slate-200 text-slate-700">${item.series}</span>
-                <h4 class="text-sm font-black text-slate-900 mt-1">
-                  ${item.name} ${item.isAddonOnly ? '' : `<span class="text-blue-700">(${item.weight})</span>`}
-                </h4>
-                <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">${item.addonsText}</p>
-              </div>
-              <button onclick="removeCartItem(${idx})" class="text-slate-400 hover:text-red-600 p-1 transition" title="移除項目">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-              </button>
-            </div>
+        const subTotal = (Number(item.unitPrice) || 0) * (Number(item.qty) || 1);
+        totalAmount += subTotal;
 
-            <div class="flex items-center justify-between pt-2 border-t border-slate-200/70">
-              <div class="inline-flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
-                <button onclick="changeCartItemQty(${idx}, -1)" class="px-2.5 py-1 text-xs font-black text-slate-700 hover:bg-slate-100">−</button>
-                <span class="px-3 py-1 text-xs font-extrabold text-slate-900 border-x border-slate-200">${item.qty}</span>
-                <button onclick="changeCartItemQty(${idx}, 1)" class="px-2.5 py-1 text-xs font-black text-slate-700 hover:bg-slate-100">+</button>
+        return `
+          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-pbes-navy text-sky-300">${item.series}</span>
+                ${!item.isAddonOnly ? `<span class="text-[11px] font-black text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">${item.weight}</span>` : ''}
               </div>
-              <span class="text-sm font-black text-slate-900">$${sub.toLocaleString()}</span>
+              <h4 class="text-sm font-black text-slate-900 mt-1.5 leading-snug">${item.name}</h4>
+              <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">${item.addonsText}</p>
+              <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-200/70">
+                <div class="inline-flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
+                  <button type="button" onclick="adjustCartItemQty(${idx}, -1)" class="px-2.5 py-1 text-xs font-black text-slate-700 hover:bg-slate-100 transition">−</button>
+                  <span class="px-2.5 py-1 text-xs font-black text-slate-900 border-x border-slate-200">${item.qty}</span>
+                  <button type="button" onclick="adjustCartItemQty(${idx}, 1)" class="px-2.5 py-1 text-xs font-black text-slate-700 hover:bg-slate-100 transition">+</button>
+                </div>
+                <span class="text-base font-black text-slate-900">$${subTotal.toLocaleString()}</span>
+              </div>
             </div>
+            <button type="button" onclick="removeCartItem(${idx})" class="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition shrink-0" title="移除商品">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
           </div>
         `;
       }).join('');
 
-      document.getElementById('cartTotalAmount').textContent = `$${grandTotal.toLocaleString()}`;
+      if (totalAmountEl) {
+        totalAmountEl.textContent = `$${totalAmount.toLocaleString()}`;
+      }
     }
 
-    function changeCartItemQty(idx, delta) {
+    function adjustCartItemQty(idx, delta) {
       const item = cart[idx];
       if (!item) return;
 
       if (delta > 0 && !item.isAddonOnly) {
-        const ball = products.find(p => p.id === item.id);
-        if (ball) {
-          const maxStock = Number(ball.stock[item.weight]) || 0;
-          const totalInCart = getCartReservedQty(item.id, item.weight);
-          if (totalInCart + delta > maxStock) {
-            showToast(`「${item.name} (${item.weight})」現貨僅餘 ${maxStock} 顆`, true);
+        const product = products.find(p => p.id === item.id);
+        if (product) {
+          const maxStock = Number(product.stock[item.weight]) || 0;
+          const totalReserved = getCartReservedQty(item.id, item.weight);
+          if (totalReserved + delta > maxStock) {
+            showToast(`「${item.name} (${item.weight})」已達現貨上限 (${maxStock})！`, true);
             return;
           }
         }
@@ -2160,7 +2268,7 @@
       selectedPaymentMethod = method;
       document.querySelectorAll('.pay-btn').forEach(btn => {
         if (btn.getAttribute('data-pay') === method) {
-          btn.className = 'pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-blue-600 bg-blue-50/70 text-slate-900 font-extrabold text-xs transition text-left shadow-xs';
+          btn.className = 'pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-blue-600 bg-blue-50/70 text-slate-900 font-extrabold text-xs transition text-left';
         } else {
           btn.className = 'pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 text-slate-800 font-extrabold text-xs transition text-left';
         }
@@ -2248,7 +2356,7 @@
         cart = [];
         updateCartUI();
         showToast(`訂單 ${orderId} 已成功送出並扣減庫存！`);
-        await syncFromGoogleSheet(false);
+        await syncFromGoogleSheet(false, true);
 
       } catch (err) {
         console.error('Order Submit Error:', err);
@@ -2305,11 +2413,11 @@
     // 10. INITIALIZATION
     // =========================================================================
     window.addEventListener('DOMContentLoaded', () => {
-      // Pre-warm PBES official logo & drilling/thumb real photos via Apps Script proxy
-      enqueueDriveImageProxy(PBES_LOGO_FILE_ID);
-      ACCESSORY_FILE_IDS.forEach(fid => enqueueDriveImageProxy(fid));
       renderCategoryTabs();
-      syncFromGoogleSheet(false);
+      // 1. 立即從本機快取秒開上次商品列表（0.01秒顯示，告別空白等待）
+      hydrateFromLocalCacheFirst();
+      // 2. 背景靜默向雲端核對最新庫存
+      syncFromGoogleSheet(false, false);
     });
   </script>
 </body>
