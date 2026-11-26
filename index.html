@@ -15,6 +15,22 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <script>
+    // Early image fallback handler so <img> onerror never throws ReferenceError before main script parses
+    window.__earlyImgErrors = [];
+    window.handleSmartImgError = function(imgEl) {
+      if (window.__handleSmartImgErrorImpl) {
+        return window.__handleSmartImgErrorImpl(imgEl);
+      }
+      window.__earlyImgErrors.push(imgEl);
+      var fallbackEl = imgEl.parentElement ? imgEl.parentElement.querySelector('.fallback-graphic') : null;
+      if (fallbackEl) {
+        imgEl.style.display = 'none';
+        fallbackEl.style.display = 'block';
+        fallbackEl.classList.remove('hidden');
+      }
+    };
+  </script>
+  <script>
     tailwind.config = {
       theme: {
         extend: {
@@ -893,6 +909,92 @@
           </div>
         </div>
 
+        <!-- FPS Payment Info Card (Shown below order receipt when payment method is '轉數快') -->
+        <div id="fpsPaymentInfoBox" class="hidden bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50 border-2 border-sky-400 rounded-2xl p-5 space-y-3.5 shadow-md animate-fade-up">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-sky-600 text-white text-xs font-black tracking-wider">FPS 轉數快</span>
+              <h4 class="text-sm sm:text-base font-black text-slate-900">轉數快付款資訊</h4>
+            </div>
+            <span class="text-[11px] font-bold text-sky-700 bg-white/90 border border-sky-200 px-2.5 py-0.5 rounded-full">待付款</span>
+          </div>
+
+          <p class="text-xs sm:text-sm font-bold text-slate-700 leading-relaxed">
+            請根據以下轉數快 (FPS) 資訊完成付款，付款後可透過 WhatsApp 傳送入數截圖給我們：
+          </p>
+
+          <div class="bg-white rounded-xl p-4 border border-sky-200/90 shadow-xs space-y-2.5">
+            <div class="text-xs sm:text-sm font-black text-slate-900 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200/80 text-center tracking-wide">
+              (識別碼 : <span class="text-blue-700 font-mono text-base">100163336</span>)(<span class="text-slate-800">Professional Bowling E S</span>)
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+              <div class="space-y-0.5">
+                <div class="text-[11px] font-bold text-slate-500">轉數快識別碼 (FPS ID)</div>
+                <div class="text-xl font-black font-mono text-blue-700 tracking-wider select-all">100163336</div>
+                <div class="text-xs font-bold text-slate-700">收款名稱：Professional Bowling E S</div>
+              </div>
+
+              <button
+                type="button"
+                id="copyFpsIdBtn"
+                onclick="copyFpsId()"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md shadow-blue-600/20 transition active:scale-95 shrink-0"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                <span id="copyFpsIdBtnText">一鍵複製識別碼</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alipay / WeChat Pay QR Code Info Card (Shown below order receipt when payment method is 'Alipay' or 'WeChat Pay') -->
+        <div id="qrPaymentInfoBox" class="hidden bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50 border-2 border-emerald-400 rounded-2xl p-5 space-y-3.5 shadow-md animate-fade-up">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span id="qrPaymentBadge" class="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-black tracking-wider">Alipay / WeChat Pay</span>
+              <h4 id="qrPaymentTitle" class="text-sm sm:text-base font-black text-slate-900">掃碼付款 QR Code</h4>
+            </div>
+            <span class="text-[11px] font-bold text-emerald-700 bg-white/90 border border-emerald-200 px-2.5 py-0.5 rounded-full">待付款</span>
+          </div>
+
+          <p class="text-xs sm:text-sm font-bold text-slate-700 leading-relaxed">
+            請使用 <span id="qrPaymentAppHint" class="text-blue-700 font-black">Alipay / WeChat Pay</span> 掃描以下收款二維碼完成付款，付款後請透過 WhatsApp 傳送入數截圖給我們：
+          </p>
+
+          <div class="bg-white rounded-xl p-4 border border-emerald-200/90 shadow-xs flex flex-col items-center justify-center space-y-2.5">
+            <div data-acc-key="payment code" onclick="openQrLightbox()" class="cursor-zoom-in group/qr relative p-2 rounded-2xl border border-slate-200 hover:border-blue-400 bg-white shadow-xs transition flex items-center justify-center min-h-[220px] w-full">
+              <img
+                id="paymentQrCodeImg"
+                src=""
+                alt="Alipay / WeChat Pay 收款二維碼"
+                class="hidden w-56 sm:w-64 h-auto rounded-xl object-contain transition-transform duration-200 group-hover/qr:scale-[1.02]"
+                onload="onQrImageLoaded(this)"
+                onerror="handleQrImgError(this)"
+              />
+              <div id="qrLoadingState" class="fallback-graphic flex flex-col items-center justify-center text-center p-4 space-y-2">
+                <span id="qrSpinnerIcon" class="inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span>
+                <span id="qrStatusText" class="text-xs font-extrabold text-slate-700">正在從 PBES 雲端載入最新收款碼...</span>
+                <a id="qrDirectOpenLink" href="#" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="hidden text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 px-3.5 py-1.5 rounded-lg shadow-xs transition">
+                  點此直接開啟收款二維碼 ↗
+                </a>
+                <a href="https://wa.me/85254084120" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-[11px] font-bold text-emerald-700 underline">
+                  或按此透過 WhatsApp 聯絡我們獲取收款碼
+                </a>
+              </div>
+            </div>
+            <button
+              type="button"
+              id="zoomQrCodeBtn"
+              onclick="openQrLightbox()"
+              class="hidden inline-flex items-center gap-1.5 text-xs font-extrabold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3.5 py-1.5 rounded-lg border border-blue-200 transition"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path></svg>
+              <span>點擊放大二維碼掃描</span>
+            </button>
+          </div>
+        </div>
+
         <div id="cartItemsList" class="space-y-3"></div>
 
         <div id="checkoutFormSection" class="hidden pt-4 border-t border-slate-200 space-y-4">
@@ -917,10 +1019,10 @@
 
             <div class="pt-1">
               <label class="block text-xs font-bold text-slate-700 mb-2">付款方式 <span class="text-red-500">*</span></label>
-              <div id="paymentMethodGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div id="paymentMethodGrid" class="grid grid-cols-2 gap-2.5">
                 <button type="button" onclick="selectPaymentMethod('轉數快')" data-pay="轉數快" data-acc-key="轉數快" class="pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-blue-600 bg-blue-50/70 text-slate-900 font-extrabold text-xs transition text-left">
                   <div class="w-9 h-7 rounded-lg bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden">
-                    <img data-gdrive-id="1i3pfp7rxbegZTexXsuAD7lqdFJBL30MO" src="https://drive.google.com/thumbnail?id=1i3pfp7rxbegZTexXsuAD7lqdFJBL30MO&sz=w200" alt="轉數快" loading="lazy" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
+                    <img data-gdrive-id="11EOMbpMqx5quwOqq4A7NmpXMJ3pbaOPV" src="https://drive.google.com/thumbnail?id=11EOMbpMqx5quwOqq4A7NmpXMJ3pbaOPV&sz=w200" alt="轉數快" loading="lazy" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
                     <span class="hidden fallback-graphic text-[9px] font-black text-sky-600">FPS</span>
                   </div>
                   <span>轉數快</span>
@@ -928,7 +1030,7 @@
 
                 <button type="button" onclick="selectPaymentMethod('Alipay')" data-pay="Alipay" data-acc-key="alipay pay" class="pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 text-slate-800 font-extrabold text-xs transition text-left">
                   <div class="w-9 h-7 rounded-lg bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden">
-                    <img data-gdrive-id="1hRTJM2qz3OiBy1ouBqtfuMXPF-meHPiZ" src="https://drive.google.com/thumbnail?id=1hRTJM2qz3OiBy1ouBqtfuMXPF-meHPiZ&sz=w200" alt="Alipay" loading="lazy" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
+                    <img data-gdrive-id="17i-P_YB_fNXuzcNet_21SL5uJptVihry" src="https://drive.google.com/thumbnail?id=17i-P_YB_fNXuzcNet_21SL5uJptVihry&sz=w200" alt="Alipay" loading="lazy" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
                     <span class="hidden fallback-graphic text-[9px] font-black text-blue-600">Alipay</span>
                   </div>
                   <span>Alipay</span>
@@ -936,10 +1038,17 @@
 
                 <button type="button" onclick="selectPaymentMethod('WeChat Pay')" data-pay="WeChat Pay" data-acc-key="wechat pay" class="pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 text-slate-800 font-extrabold text-xs transition text-left">
                   <div class="w-9 h-7 rounded-lg bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden">
-                    <img data-gdrive-id="1A7bEDeYFYfy7yEDi1Acw29E4W3qqT2WP" src="https://drive.google.com/thumbnail?id=1A7bEDeYFYfy7yEDi1Acw29E4W3qqT2WP&sz=w200" alt="WeChat Pay" loading="lazy" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
+                    <img data-gdrive-id="1p1MI5rSzjTmE4ismHDPvoPKsTXDGCFkq" src="https://drive.google.com/thumbnail?id=1p1MI5rSzjTmE4ismHDPvoPKsTXDGCFkq&sz=w200" alt="WeChat Pay" loading="lazy" class="w-full h-full object-contain" onerror="handleSmartImgError(this)" />
                     <span class="hidden fallback-graphic text-[9px] font-black text-emerald-600">WeChat</span>
                   </div>
                   <span>WeChat Pay</span>
+                </button>
+
+                <button type="button" onclick="selectPaymentMethod('到店付款')" data-pay="到店付款" class="pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 text-slate-800 font-extrabold text-xs transition text-left">
+                  <div class="w-9 h-7 rounded-lg bg-amber-50 border border-amber-200 p-1 flex items-center justify-center shrink-0 text-amber-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                  </div>
+                  <span>到店付款</span>
                 </button>
               </div>
             </div>
@@ -971,7 +1080,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
       </div>
-      <div class="w-full min-h-[260px] max-h-[68vh] bg-slate-50 rounded-2xl border border-slate-200/80 p-4 flex items-center justify-center overflow-hidden">
+      <div id="lightboxContentBox" class="w-full min-h-[260px] max-h-[72vh] bg-slate-50 rounded-2xl border border-slate-200/80 p-4 flex items-center justify-center overflow-hidden">
         <img
           id="lightboxImg"
           src=""
@@ -979,6 +1088,11 @@
           onerror="handleSmartImgError(this)"
           class="max-w-full max-h-[60vh] object-contain rounded-xl drop-shadow-md"
         />
+        <div class="hidden fallback-graphic flex flex-col items-center justify-center text-center p-6 space-y-2">
+          <span class="inline-block w-7 h-7 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></span>
+          <span class="text-sm font-black text-slate-800">正在從 PBES 雲端原圖庫載入高清圖片...</span>
+          <span class="text-xs text-slate-500">若仍無法顯示，請按確認收據上的 WhatsApp 聯絡我們</span>
+        </div>
       </div>
       <p class="text-xs text-slate-400 mt-3">點擊視窗外部或右上角「✕」關閉</p>
     </div>
@@ -991,9 +1105,10 @@
     const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUGIhQrrCN-4bY2uCbYqJXRdchrSeDGKe9PTfEepfvdDix-gdTmHqBZwhUCYdKOFsHLg/exec';
     const STORAGE_KEY_URL = 'pbes_apps_script_url_v3';
     const LOCAL_CATALOG_CACHE_KEY = 'pbes_cached_catalog_v2';
-
+    const LOCAL_QR_CACHE_KEY = 'pbes_cached_payment_qr_v1';
     const WEIGHT_KEYS = ['12 lb', '13 lb', '14 lb', '15 lb', '16 lb'];
-
+    let latestPaymentQrSource = '';
+    let latestPaymentQrFileId = '';
     const MAIN_TABS = [
       { id: 'all', label: '全部商品' },
       { id: 'balls', label: '保齡球' },
@@ -1058,7 +1173,7 @@
     const imageFetchQueue = [];
     const queuedFileIds = new Set();
     let activeProxyWorkers = 0;
-    const MAX_PROXY_CONCURRENCY = 2; // 嚴格限制最多 2 條備援通道，絕不阻塞商品資料連線
+    const MAX_PROXY_CONCURRENCY = 2;
 
     function getAppsScriptUrl() {
       const saved = localStorage.getItem(STORAGE_KEY_URL);
@@ -1096,7 +1211,6 @@
             return hit;
           }
         } catch (e) {}
-        // 使用 w360 輕量縮圖網址，載入體積減少 80%，毫秒級完成顯示
         return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${size}`;
       }
       return trimmed;
@@ -1133,6 +1247,13 @@
               imageBase64Cache.set(fileId, data.dataUrl);
               try {
                 sessionStorage.setItem(cachedStorageKey, data.dataUrl);
+                if (fileId === latestPaymentQrFileId) {
+                  localStorage.setItem(LOCAL_QR_CACHE_KEY, JSON.stringify({
+                    fileId: fileId,
+                    dataUrl: data.dataUrl,
+                    savedAt: Date.now()
+                  }));
+                }
               } catch (storageErr) {}
               applyCachedImageToDom(fileId, data.dataUrl);
             }
@@ -1153,11 +1274,151 @@
         imgEl.style.display = 'block';
         imgEl.classList.remove('hidden');
         const fallbackEl = imgEl.parentElement ? imgEl.parentElement.querySelector('.fallback-graphic') : null;
-        if (fallbackEl) fallbackEl.style.display = 'none';
+        if (fallbackEl) {
+          fallbackEl.style.display = 'none';
+          fallbackEl.classList.add('hidden');
+        }
       });
+      if (fileId === latestPaymentQrFileId) {
+        const qrImgEl = document.getElementById('paymentQrCodeImg');
+        if (qrImgEl) onQrImageLoaded(qrImgEl);
+      }
     }
 
-    // 只有當瀏覽器原生 CDN 載入失敗時，才啟動下一層 CDN 或 Apps Script 代理
+    function resolvePaymentQrUrlFromLinks(normalizedImageLinks) {
+      if (!normalizedImageLinks || typeof normalizedImageLinks !== 'object') return '';
+      const exactKeys = ['payment code', 'paymentcode', 'qr code', 'qrcode', '收款碼', '收款二維碼', '付款碼', 'alipay / wechat', 'alipay/wechat'];
+      for (const k of exactKeys) {
+        if (normalizedImageLinks[k]) return String(normalizedImageLinks[k]).trim();
+      }
+      const fuzzyKey = Object.keys(normalizedImageLinks).find(k =>
+        k.includes('payment') || k.includes('qr') || k.includes('收款') || k.includes('二維碼')
+      );
+      return fuzzyKey ? String(normalizedImageLinks[fuzzyKey]).trim() : '';
+    }
+
+    function setPaymentQrSource(rawUrl) {
+      const cleanRaw = String(rawUrl || '').trim();
+      if (!cleanRaw) return;
+      latestPaymentQrSource = cleanRaw;
+      const fileId = extractGoogleDriveFileId(cleanRaw);
+      latestPaymentQrFileId = fileId;
+
+      const qrImgEl = document.getElementById('paymentQrCodeImg');
+      const directLink = document.getElementById('qrDirectOpenLink');
+      if (!qrImgEl) return;
+
+      qrImgEl.removeAttribute('data-qr-stage');
+      if (fileId) {
+        qrImgEl.setAttribute('data-gdrive-id', fileId);
+        if (directLink) directLink.href = `https://drive.google.com/file/d/${fileId}/view`;
+
+        // 1. Check permanent localStorage cache first for 0ms instant display
+        try {
+          const savedQrRaw = localStorage.getItem(LOCAL_QR_CACHE_KEY);
+          if (savedQrRaw) {
+            const savedQr = JSON.parse(savedQrRaw);
+            if (savedQr && savedQr.fileId === fileId && savedQr.dataUrl && savedQr.dataUrl.startsWith('data:image/')) {
+              imageBase64Cache.set(fileId, savedQr.dataUrl);
+            }
+          }
+        } catch (e) {}
+
+        if (imageBase64Cache.has(fileId)) {
+          qrImgEl.src = imageBase64Cache.get(fileId);
+          onQrImageLoaded(qrImgEl);
+        } else {
+          // Immediately pre-fetch via Apps Script proxy AND try direct thumbnail in parallel
+          enqueueDriveImageProxy(fileId);
+          qrImgEl.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+        }
+      } else if (cleanRaw.startsWith('http') || cleanRaw.startsWith('data:image/')) {
+        qrImgEl.removeAttribute('data-gdrive-id');
+        if (directLink) directLink.href = cleanRaw;
+        qrImgEl.src = cleanRaw;
+      }
+    }
+
+    function openQrLightbox() {
+      const srcToOpen = latestPaymentQrFileId || latestPaymentQrSource;
+      if (!srcToOpen) {
+        showToast('收款二維碼載入中，請稍候或按同步庫存', true);
+        return;
+      }
+      openImageLightbox(srcToOpen, 'PBES 收款二維碼 (Alipay / WeChat Pay)');
+    }
+
+    function onQrImageLoaded(imgEl) {
+      imgEl.style.display = 'block';
+      imgEl.classList.remove('hidden');
+      const fallbackEl = document.getElementById('qrLoadingState');
+      const zoomBtn = document.getElementById('zoomQrCodeBtn');
+      if (fallbackEl) {
+        fallbackEl.style.display = 'none';
+        fallbackEl.classList.add('hidden');
+      }
+      if (zoomBtn) {
+        zoomBtn.classList.remove('hidden');
+      }
+    }
+
+    function handleQrImgError(imgEl) {
+      const fileId = imgEl.getAttribute('data-gdrive-id') || latestPaymentQrFileId;
+      const stage = Number(imgEl.getAttribute('data-qr-stage') || '0');
+      const directLink = document.getElementById('qrDirectOpenLink');
+
+      if (!fileId) {
+        imgEl.style.display = 'none';
+        const fallbackEl = document.getElementById('qrLoadingState');
+        const spinnerEl = document.getElementById('qrSpinnerIcon');
+        const statusTextEl = document.getElementById('qrStatusText');
+        if (fallbackEl) {
+          fallbackEl.style.display = 'flex';
+          fallbackEl.classList.remove('hidden');
+        }
+        if (spinnerEl) spinnerEl.classList.add('hidden');
+        if (statusTextEl) statusTextEl.textContent = '請在 Google Sheet「圖片連結」分頁填入 payment code 網址';
+        return;
+      }
+
+      if (directLink) {
+        directLink.href = `https://drive.google.com/file/d/${fileId}/view`;
+      }
+
+      if (imageBase64Cache.has(fileId)) {
+        imgEl.src = imageBase64Cache.get(fileId);
+        onQrImageLoaded(imgEl);
+        return;
+      }
+
+      const candidates = [
+        `https://lh3.googleusercontent.com/d/${fileId}=w800`,
+        `https://drive.google.com/uc?export=view&id=${fileId}`
+      ];
+
+      if (stage < candidates.length) {
+        imgEl.setAttribute('data-qr-stage', String(stage + 1));
+        if (stage === 0) {
+          enqueueDriveImageProxy(fileId);
+        }
+        imgEl.src = candidates[stage];
+        return;
+      }
+
+      // Keep waiting cleanly if proxy is still fetching, otherwise show direct button
+      imgEl.style.display = 'none';
+      const fallbackEl = document.getElementById('qrLoadingState');
+      const spinnerEl = document.getElementById('qrSpinnerIcon');
+      const statusTextEl = document.getElementById('qrStatusText');
+      if (fallbackEl) {
+        fallbackEl.style.display = 'flex';
+        fallbackEl.classList.remove('hidden');
+      }
+      if (spinnerEl) spinnerEl.classList.add('hidden');
+      if (statusTextEl) statusTextEl.textContent = '請點擊下方按鈕開啟或聯絡 WhatsApp';
+      if (directLink) directLink.classList.remove('hidden');
+    }
+
     function handleSmartImgError(imgEl) {
       const fileId = imgEl.getAttribute('data-gdrive-id');
       const retryStage = Number(imgEl.getAttribute('data-retry-stage') || '0');
@@ -1185,6 +1446,11 @@
         fallbackEl.classList.remove('hidden');
       }
     }
+    window.__handleSmartImgErrorImpl = handleSmartImgError;
+    if (Array.isArray(window.__earlyImgErrors) && window.__earlyImgErrors.length > 0) {
+      window.__earlyImgErrors.forEach(function(el) { handleSmartImgError(el); });
+      window.__earlyImgErrors = [];
+    }
 
     // =========================================================================
     // LIGHTBOX ZOOM VIEWER FOR ALL ACCESSORY & PRODUCT IMAGES
@@ -1203,16 +1469,21 @@
 
       titleEl.textContent = titleText || '商品高清圖片預覽';
       imgEl.style.display = 'block';
+      const fallbackEl = imgEl.parentElement ? imgEl.parentElement.querySelector('.fallback-graphic') : null;
+      if (fallbackEl) {
+        fallbackEl.style.display = 'none';
+        fallbackEl.classList.add('hidden');
+      }
 
       const fileId = extractGoogleDriveFileId(fileIdOrUrl) || (fileIdOrUrl && !String(fileIdOrUrl).startsWith('http') ? String(fileIdOrUrl).trim() : '');
       if (fileId) {
         imgEl.setAttribute('data-gdrive-id', fileId);
         imgEl.removeAttribute('data-retry-stage');
+        enqueueDriveImageProxy(fileId);
         if (imageBase64Cache.has(fileId)) {
           imgEl.src = imageBase64Cache.get(fileId);
         } else {
-          // 放大檢視時才載入高清 w1000 圖片
-          imgEl.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+          imgEl.src = `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
         }
       } else {
         imgEl.removeAttribute('data-gdrive-id');
@@ -1320,7 +1591,6 @@
         if (p.stock && typeof p.stock === 'object') {
           Object.keys(p.stock).forEach(k => {
             let normKey = String(k).trim();
-            // 自動修正 26.5cmm 等多打一個 m 的尺碼格式
             if (/^\d+(?:\.\d+)?cmm+$/i.test(normKey)) {
               normKey = normKey.replace(/cmm+$/i, 'cm');
             }
@@ -1345,19 +1615,39 @@
       });
 
       if (json.imageLinks && typeof json.imageLinks === 'object') {
+        const normalizedImageLinks = {};
+        Object.keys(json.imageLinks).forEach(rawKey => {
+          normalizedImageLinks[String(rawKey).trim().toLowerCase()] = json.imageLinks[rawKey];
+        });
+
+        const matchedQrUrl = resolvePaymentQrUrlFromLinks(normalizedImageLinks);
+        if (matchedQrUrl) {
+          setPaymentQrSource(matchedQrUrl);
+        }
+
         document.querySelectorAll('[data-acc-key]').forEach(box => {
-          const key = box.getAttribute('data-acc-key');
-          const matchedUrl = json.imageLinks[key];
+          const key = String(box.getAttribute('data-acc-key') || '').trim().toLowerCase();
+          if (key === 'payment code') return; // Handled by setPaymentQrSource above
+          const matchedUrl = normalizedImageLinks[key];
           if (matchedUrl) {
             const newId = extractGoogleDriveFileId(matchedUrl);
             const img = box.querySelector('img');
-            if (newId && img && img.getAttribute('data-gdrive-id') !== newId) {
-              img.setAttribute('data-gdrive-id', newId);
-              img.removeAttribute('data-retry-stage');
-              img.style.display = 'block';
-              img.src = `https://drive.google.com/thumbnail?id=${newId}&sz=w300`;
+            if (img) {
+              if (newId) {
+                img.setAttribute('data-gdrive-id', newId);
+                img.removeAttribute('data-retry-stage');
+                img.style.display = 'block';
+                img.src = `https://drive.google.com/thumbnail?id=${newId}&sz=w800`;
+              } else if (matchedUrl.startsWith('http')) {
+                img.removeAttribute('data-gdrive-id');
+                img.style.display = 'block';
+                img.src = matchedUrl;
+              }
               const fb = box.querySelector('.fallback-graphic');
-              if (fb) fb.style.display = 'none';
+              if (fb) {
+                fb.style.display = 'none';
+                fb.classList.add('hidden');
+              }
             }
           }
         });
@@ -1378,7 +1668,7 @@
         if (parsed && parsed.data && applyCatalogPayload(parsed.data)) {
           const statusBadge = document.getElementById('syncStatusBadge');
           if (statusBadge) {
-            statusBadge.className = 'flex items-center gap-1.5 text-[11px] text-sky-300 font-bold leading-tight mt-0.5';
+            statusBadge.className = 'hidden sm:flex items-center gap-1.5 text-[11px] text-sky-300 font-bold leading-tight mt-0.5';
             statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span><span>秒開快取已載入 (${products.length} 款) · 背景同步最新庫存中...</span>`;
           }
           return true;
@@ -1397,7 +1687,7 @@
 
       if (syncIcon) syncIcon.classList.add('animate-spin');
       if (statusBadge && products.length === 0) {
-        statusBadge.className = 'flex items-center gap-1.5 text-[11px] text-amber-300 font-semibold leading-tight mt-0.5';
+        statusBadge.className = 'hidden sm:flex items-center gap-1.5 text-[11px] text-amber-300 font-semibold leading-tight mt-0.5';
         statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span><span>正在同步 PBES 雲端庫存...</span>`;
       }
 
@@ -1431,7 +1721,7 @@
           } catch (storageErr) {}
 
           if (statusBadge) {
-            statusBadge.className = 'flex items-center gap-1.5 text-[11px] text-emerald-400 font-bold leading-tight mt-0.5';
+            statusBadge.className = 'hidden sm:flex items-center gap-1.5 text-[11px] text-emerald-400 font-bold leading-tight mt-0.5';
             statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>已連線至 PBES 雲端庫存 · 共 ${products.length} 款商品</span>`;
           }
 
@@ -1457,7 +1747,7 @@
           document.getElementById('offlineWarningText').textContent = `目前顯示本機快取/備援目錄資料（連線異常：${err.name === 'AbortError' ? '連線逾時' : err.message}）。`;
         }
         if (statusBadge) {
-          statusBadge.className = 'flex items-center gap-1.5 text-[11px] text-amber-400 font-bold leading-tight mt-0.5';
+          statusBadge.className = 'hidden sm:flex items-center gap-1.5 text-[11px] text-amber-400 font-bold leading-tight mt-0.5';
           statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>本機快取模式 (${products.length} 款)</span>`;
         }
       } finally {
@@ -1474,7 +1764,6 @@
       const keys = Object.keys(item.stock);
       if (keys.length === 0) return ['現貨'];
 
-      // 針對保齡球器材：若同時存在「現貨」與其他顏色/款式欄位，過濾掉沒有設定庫存的空白欄位，避免單一規格器材顯示多餘顏色
       if (item.productType === 'gear' && keys.length > 1) {
         const specificKeys = keys.filter(k => k !== '現貨' && (Number(item.stock[k]) || 0) > 0);
         if (specificKeys.length > 0) return specificKeys;
@@ -1677,7 +1966,6 @@
         const isSoldOut = totalStock <= 0;
         const optKeys = getItemOptionKeys(item);
 
-        // 若尺碼過多（例如 23cm~29.5cm 共 14 個尺碼），卡片上精簡顯示有現貨的尺碼，避免卡片過長
         const displayKeys = (item.productType === 'shoe' && optKeys.length > 8)
           ? optKeys.filter(k => (Number(item.stock[k]) || 0) > 0)
           : optKeys;
@@ -2054,7 +2342,6 @@
       const endX = endRect.left + endRect.width / 2;
       const endY = endRect.top + endRect.height / 2;
 
-      // 建立帶有藍金色外框與發光效果的飛行貨品縮圖
       const flyer = document.createElement('div');
       flyer.style.position = 'fixed';
       flyer.style.left = `${startX - 44}px`;
@@ -2089,7 +2376,6 @@
 
       document.body.appendChild(flyer);
 
-      // 拋物線弧頂控制點
       const deltaX = endX - startX;
       const deltaY = endY - startY;
       const arcPeakY = Math.min(deltaY * 0.45 - 105, -80);
@@ -2106,7 +2392,6 @@
 
       anim.onfinish = () => {
         flyer.remove();
-        // 觸發右上角購物車按鈕與數量徽章彈跳高光動畫
         cartBtn.classList.remove('animate-cart-bounce');
         void cartBtn.offsetWidth;
         cartBtn.classList.add('animate-cart-bounce');
@@ -2282,6 +2567,9 @@
 
     function selectPaymentMethod(method) {
       selectedPaymentMethod = method;
+      if ((method === 'Alipay' || method === 'WeChat Pay') && latestPaymentQrSource) {
+        setPaymentQrSource(latestPaymentQrSource);
+      }
       document.querySelectorAll('.pay-btn').forEach(btn => {
         if (btn.getAttribute('data-pay') === method) {
           btn.className = 'pay-btn flex items-center gap-2.5 p-2.5 rounded-xl border-2 border-blue-600 bg-blue-50/70 text-slate-900 font-extrabold text-xs transition text-left';
@@ -2350,6 +2638,8 @@
           throw new Error(result.message || '庫存不足或後端寫入失敗');
         }
 
+        const isFpsPayment = selectedPaymentMethod === '轉數快';
+        const isQrPayment = selectedPaymentMethod === 'Alipay' || selectedPaymentMethod === 'WeChat Pay';
         const lines = [
           `====================================`,
           `PBES 專業保齡球及用品訂購確認收據`,
@@ -2358,6 +2648,8 @@
           `聯絡人姓名：${customerName}`,
           `聯絡電話：${customerPhone}`,
           `付款方式：${selectedPaymentMethod}`,
+          isFpsPayment ? `轉數快付款資料：(識別碼 : 100163336)(Professional Bowling E S)` : null,
+          isQrPayment ? `付款提示：請掃描下方 ${selectedPaymentMethod} 收款二維碼並傳送入數截圖` : null,
           customerNote ? `顧客備註：${customerNote}` : null,
           `------------------------------------`,
           ...cart.map((i, n) => `${n + 1}. ${i.name}${i.isAddonOnly ? '' : ` [${i.weight}]`} x${i.qty}\n   ${i.addonsText} — $${(i.unitPrice * i.qty).toLocaleString()}`),
@@ -2368,6 +2660,38 @@
 
         document.getElementById('orderReceiptText').textContent = lines;
         document.getElementById('orderReceiptCard').classList.remove('hidden');
+
+        const fpsBox = document.getElementById('fpsPaymentInfoBox');
+        if (fpsBox) {
+          if (isFpsPayment) {
+            fpsBox.classList.remove('hidden');
+          } else {
+            fpsBox.classList.add('hidden');
+          }
+        }
+
+        const qrBox = document.getElementById('qrPaymentInfoBox');
+        if (qrBox) {
+          if (isQrPayment) {
+            const qrBadge = document.getElementById('qrPaymentBadge');
+            const qrTitle = document.getElementById('qrPaymentTitle');
+            const qrAppHint = document.getElementById('qrPaymentAppHint');
+            if (qrBadge) qrBadge.textContent = selectedPaymentMethod;
+            if (qrTitle) qrTitle.textContent = `${selectedPaymentMethod} 掃碼付款`;
+            if (qrAppHint) qrAppHint.textContent = selectedPaymentMethod;
+            if (latestPaymentQrSource) {
+              setPaymentQrSource(latestPaymentQrSource);
+            }
+            qrBox.classList.remove('hidden');
+          } else {
+            qrBox.classList.add('hidden');
+          }
+        }
+
+        const drawerScrollArea = document.querySelector('#cartDrawerOverlay .overflow-y-auto');
+        if (drawerScrollArea) {
+          drawerScrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         cart = [];
         updateCartUI();
@@ -2397,6 +2721,48 @@
         showToast('複製失敗，請手動選取文字複製', true);
       }
       document.body.removeChild(textarea);
+    }
+
+    function copyFpsId() {
+      const fpsId = '100163336';
+      const btnTextEl = document.getElementById('copyFpsIdBtnText');
+      const btnEl = document.getElementById('copyFpsIdBtn');
+
+      const onCopiedSuccess = () => {
+        showToast(`已複製轉數快識別碼：${fpsId}`);
+        if (btnTextEl && btnEl) {
+          btnTextEl.textContent = '已複製 ✓';
+          btnEl.classList.remove('from-blue-600', 'to-sky-600');
+          btnEl.classList.add('from-emerald-600', 'to-teal-600');
+          setTimeout(() => {
+            btnTextEl.textContent = '一鍵複製識別碼';
+            btnEl.classList.remove('from-emerald-600', 'to-teal-600');
+            btnEl.classList.add('from-blue-600', 'to-sky-600');
+          }, 2000);
+        }
+      };
+
+      const fallbackCopy = () => {
+        const textarea = document.createElement('textarea');
+        textarea.value = fpsId;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          onCopiedSuccess();
+        } catch (e) {
+          showToast('複製失敗，請手動複製識別碼：100163336', true);
+        }
+        document.body.removeChild(textarea);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fpsId).then(onCopiedSuccess).catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
     }
 
     // =========================================================================
@@ -2430,10 +2796,21 @@
     // =========================================================================
     window.addEventListener('DOMContentLoaded', () => {
       renderCategoryTabs();
-      // 1. 立即從本機快取秒開上次商品列表（0.01秒顯示，告別空白等待）
+      // 1. Instantly load cached QR Code from localStorage if available (0ms)
+      try {
+        const savedQrRaw = localStorage.getItem(LOCAL_QR_CACHE_KEY);
+        if (savedQrRaw) {
+          const savedQr = JSON.parse(savedQrRaw);
+          if (savedQr && savedQr.fileId && savedQr.dataUrl) {
+            latestPaymentQrFileId = savedQr.fileId;
+            latestPaymentQrSource = `https://drive.google.com/file/d/${savedQr.fileId}/view`;
+            imageBase64Cache.set(savedQr.fileId, savedQr.dataUrl);
+            setPaymentQrSource(latestPaymentQrSource);
+          }
+        }
+      } catch (e) {}
       hydrateFromLocalCacheFirst();
-      // 2. 背景靜默向雲端核對最新庫存
-      syncFromGoogleSheet(false, false);
+      syncFromGoogleSheet(false, true);
     });
   </script>
 </body>
