@@ -207,6 +207,18 @@
           <span>鑽孔及配件</span>
         </button>
 
+        <!-- 服務預約按鈕 -->
+        <button
+          onclick="openBookingDrawer()"
+          aria-label="預約店舖服務"
+          class="inline-flex items-center justify-center gap-1.5 text-xs sm:text-sm font-extrabold text-slate-950 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 p-2 sm:px-3.5 sm:py-2.5 rounded-xl shadow-lg shadow-amber-500/25 transition active:scale-95"
+        >
+          <svg class="w-5 h-5 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <span class="hidden sm:inline">預約服務</span>
+        </button>
+
         <button
           id="headerCartBtn"
           onclick="toggleCartDrawer(true)"
@@ -248,6 +260,9 @@
             所有保齡球售價均<strong class="text-amber-400 font-extrabold underline decoration-amber-400/50 underline-offset-4">不包鑽工</strong>，選購時可按需加購專業鑽孔服務（+$380）及 Turbo / Jopo 活動式拇指。
           </p>
           <div class="pt-1 flex flex-wrap items-center gap-2.5 text-xs">
+            <button onclick="openBookingDrawer()" class="w-full sm:w-auto justify-center inline-flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-4 py-2.5 rounded-xl shadow-md transition">
+              <span>📅 網上預約：鑽波 / 打磨上蠟 / 選購 / 補波</span>
+            </button>
             <button onclick="scrollToDrillingSection()" class="w-full sm:w-auto justify-center inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold px-4 py-2.5 rounded-xl transition">
               <span class="w-2 h-2 rounded-full bg-amber-400"></span>
               <span>單獨加購鑽孔 (+$380) / 活動式拇指配件</span>
@@ -1095,6 +1110,132 @@
         </div>
       </div>
       <p class="text-xs text-slate-400 mt-3">點擊視窗外部或右上角「✕」關閉</p>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- PBES 服務預約系統抽屜 (Service Booking Drawer)                         -->
+  <!-- ===================================================================== -->
+  <div id="bookingDrawerOverlay" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm justify-end">
+    <div class="bg-white w-full max-w-lg h-full flex flex-col shadow-2xl animate-slide-in">
+      <!-- Header -->
+      <div class="bg-pbes-dark text-white px-6 py-4 flex items-center justify-between shrink-0 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          </span>
+          <div>
+            <h3 class="text-base sm:text-lg font-black leading-tight">預約店舖服務</h3>
+            <p class="text-[11px] text-slate-400">度手鑽波 · 打磨上蠟 · 選購產品 · 補波</p>
+          </div>
+        </div>
+        <button onclick="closeBookingDrawer()" class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+
+        <!-- 預約成功收據卡片 -->
+        <div id="bookingSuccessCard" class="hidden bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-5 space-y-3 shadow-sm animate-fade-up">
+          <div class="flex items-center gap-2 text-emerald-800 font-black text-base">
+            <svg class="w-6 h-6 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>預約已成功確認！</span>
+          </div>
+          <p class="text-xs text-emerald-800 leading-relaxed">
+            我們已為你保留該時段並同步通知職員，如需更改時間請透過 WhatsApp 聯絡我們。
+          </p>
+          <pre id="bookingReceiptText" class="text-xs text-slate-800 bg-white p-3.5 rounded-xl border border-emerald-200 whitespace-pre-wrap font-mono leading-relaxed"></pre>
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <a href="https://wa.me/85254084120" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-3 py-2 rounded-xl border border-emerald-300 transition">
+              <span>WhatsApp 聯絡：54084120</span>
+            </a>
+            <button type="button" onclick="resetBookingFormForNew()" class="text-xs font-bold bg-pbes-navy hover:bg-slate-800 text-white px-4 py-2 rounded-xl transition">
+              預約另一個時段
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 1: 選擇服務項目 -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-black text-slate-900">1. 選擇預約服務 (All Services)</label>
+            <span class="text-[11px] font-bold text-amber-600">自動計算所需時長</span>
+          </div>
+          <div id="bookingServiceList" class="grid grid-cols-1 gap-2.5">
+            <!-- JS 動態渲染 4 項服務 -->
+          </div>
+        </div>
+
+        <!-- Step 2: 選擇日期與可用時段 -->
+        <div class="space-y-3 pt-2 border-t border-slate-200">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-black text-slate-900">2. 選擇日期與時段</label>
+            <span id="bookingDayHoursHint" class="text-[11px] font-bold text-blue-600">請先選擇日期</span>
+          </div>
+
+          <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">預約日期（逢星期日、三休息）</label>
+              <input
+                type="date"
+                id="bookingDateInput"
+                onchange="onBookingDateChange()"
+                class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              />
+            </div>
+
+            <!-- 營業時間提示膠囊 -->
+            <div class="text-[11px] text-slate-600 bg-white px-3 py-2 rounded-xl border border-slate-200/80 leading-relaxed">
+              <strong class="text-slate-800">營業時間：</strong>一、二、四、五 <span class="font-mono font-bold text-blue-700">12:00-22:00</span> ｜ 星期六 <span class="font-mono font-bold text-blue-700">10:00-18:00</span> ｜ 星期日及三 <span class="text-red-600 font-bold">Closed</span>
+            </div>
+
+            <!-- 可預約時間按鈕格 -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-bold text-slate-700">可預約開始時間：</span>
+                <span id="bookingSlotLoading" class="hidden text-[11px] text-blue-600 font-bold animate-pulse">正在同步最新時段...</span>
+              </div>
+              <div id="bookingTimeSlotsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-52 overflow-y-auto pr-1">
+                <!-- JS 動態生成不撞期時段 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: 聯絡資料 -->
+        <div class="space-y-3 pt-2 border-t border-slate-200">
+          <h4 class="text-sm font-black text-slate-900">3. 填寫聯絡資料</h4>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">客戶姓名 <span class="text-red-500">*</span></label>
+            <input type="text" id="bkCustName" placeholder="請輸入姓名（例：陳大文）" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">聯絡電話 (WhatsApp) <span class="text-red-500">*</span></label>
+            <input type="tel" id="bkCustPhone" placeholder="例如：9123 4567" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">服務備註（球款、右手/左手、或特別要求）</label>
+            <textarea id="bkCustNote" rows="2" placeholder="例如：鑽新波 Phaze II，右手單手曲球..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="bg-slate-50 border-t border-slate-200 p-5 shrink-0 space-y-3">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-slate-500">已選預約摘要：</span>
+          <span id="bookingSummaryLabel" class="font-black text-blue-700">尚未選擇時段</span>
+        </div>
+        <button
+          id="submitBookingBtn"
+          onclick="submitBookingToGoogleSheet()"
+          class="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-sm py-3.5 rounded-xl shadow-lg shadow-amber-500/25 transition active:scale-95 flex items-center justify-center gap-2"
+        >
+          <span>確認提交預約</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2789,6 +2930,312 @@
         toast.style.transition = 'opacity 0.25s ease';
         setTimeout(() => toast.remove(), 260);
       }, 3200);
+    }
+
+    // =========================================================================
+    // 11. 獨立服務預約系統 (連接第二個 Google Sheet + Telegram 通知)
+    // =========================================================================
+    const BOOKING_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9Hfkb5E2adR3DOdbDMm8wZv-_AplLbIZ2L6-yzih4aR6mdTuk7reoLx85-0ON0qTR/exec';
+
+    const BOOKING_SERVICES = [
+      { id: 'drill', name: '鑽波', duration: 60, durationLabel: '1 h', price: 'Price varies' },
+      { id: 'sand', name: '打磨(Sand)/上蠟(Polish)', duration: 15, durationLabel: '15 min', price: 'HK$40' },
+      { id: 'shop', name: '選購產品', duration: 30, durationLabel: '30 min', price: 'Price varies' },
+      { id: 'plug', name: '補波', duration: 30, durationLabel: '30 min', price: 'Price varies' }
+    ];
+
+    // 營業時間 (0=日, 1=一, 2=二, 3=三, 4=四, 5=五, 6=六)
+    const PBES_HOURS = {
+      0: null,
+      1: { start: 12 * 60, end: 22 * 60, label: '星期一 12:00 - 22:00' },
+      2: { start: 12 * 60, end: 22 * 60, label: '星期二 12:00 - 22:00' },
+      3: null,
+      4: { start: 12 * 60, end: 22 * 60, label: '星期四 12:00 - 22:00' },
+      5: { start: 12 * 60, end: 22 * 60, label: '星期五 12:00 - 22:00' },
+      6: { start: 10 * 60, end: 18 * 60, label: '星期六 10:00 - 18:00' }
+    };
+
+    let selectedBookingService = BOOKING_SERVICES[0];
+    let selectedBookingTime = '';
+    let existingBookings = [];
+
+    function openBookingDrawer() {
+      const overlay = document.getElementById('bookingDrawerOverlay');
+      if (!overlay) return;
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+
+      renderBookingServices();
+
+      const dateInput = document.getElementById('bookingDateInput');
+      if (dateInput && !dateInput.value) {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        while (!PBES_HOURS[d.getDay()]) {
+          d.setDate(d.getDate() + 1);
+        }
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        dateInput.min = new Date().toISOString().split('T')[0];
+        dateInput.value = `${yyyy}-${mm}-${dd}`;
+      }
+
+      updateBookingSummary();
+      fetchExistingBookings();
+    }
+
+    function closeBookingDrawer() {
+      const overlay = document.getElementById('bookingDrawerOverlay');
+      if (!overlay) return;
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+    }
+
+    function renderBookingServices() {
+      const container = document.getElementById('bookingServiceList');
+      if (!container) return;
+
+      container.innerHTML = BOOKING_SERVICES.map(srv => {
+        const isSelected = selectedBookingService.id === srv.id;
+        return `
+          <div
+            onclick="selectBookingService('${srv.id}')"
+            class="cursor-pointer rounded-2xl p-3.5 border-2 transition flex items-center justify-between ${
+              isSelected
+                ? 'border-amber-500 bg-amber-50/70 shadow-xs'
+                : 'border-slate-200 bg-white hover:border-amber-300'
+            }"
+          >
+            <div>
+              <div class="text-sm font-black text-slate-900">${srv.name}</div>
+              <div class="text-xs font-bold text-slate-500 mt-0.5">${srv.durationLabel} | ${srv.price}</div>
+            </div>
+            <span class="px-3 py-1.5 rounded-xl text-xs font-black transition ${
+              isSelected
+                ? 'bg-amber-500 text-slate-950'
+                : 'bg-slate-100 text-slate-700'
+            }">
+              ${isSelected ? '已選擇 ✓' : 'SELECT'}
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectBookingService(serviceId) {
+      const found = BOOKING_SERVICES.find(s => s.id === serviceId);
+      if (!found) return;
+      selectedBookingService = found;
+      selectedBookingTime = '';
+      renderBookingServices();
+      renderAvailableTimeSlots();
+      updateBookingSummary();
+    }
+
+    async function fetchExistingBookings() {
+      const loadingEl = document.getElementById('bookingSlotLoading');
+      if (loadingEl) loadingEl.classList.remove('hidden');
+
+      try {
+        if (!BOOKING_APPS_SCRIPT_URL.startsWith('https://')) {
+          renderAvailableTimeSlots();
+          return;
+        }
+        const res = await fetch(`${BOOKING_APPS_SCRIPT_URL}?t=${Date.now()}`, {
+          method: 'GET',
+          redirect: 'follow'
+        });
+        const data = await res.json();
+        if (data && data.status === 'ok' && Array.isArray(data.bookings)) {
+          existingBookings = data.bookings;
+        }
+      } catch (err) {
+        console.warn('讀取現有預約時段失敗:', err);
+      } finally {
+        if (loadingEl) loadingEl.classList.add('hidden');
+        renderAvailableTimeSlots();
+      }
+    }
+
+    function onBookingDateChange() {
+      selectedBookingTime = '';
+      renderAvailableTimeSlots();
+      updateBookingSummary();
+    }
+
+    function bkTimeToMin(str) {
+      const [h, m] = String(str).split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function bkMinToTime(mins) {
+      const h = String(Math.floor(mins / 60)).padStart(2, '0');
+      const m = String(mins % 60).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+
+    function renderAvailableTimeSlots() {
+      const dateStr = document.getElementById('bookingDateInput').value;
+      const grid = document.getElementById('bookingTimeSlotsGrid');
+      const hint = document.getElementById('bookingDayHoursHint');
+      if (!dateStr || !grid) return;
+
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dayOfWeek = new Date(y, m - 1, d).getDay();
+      const dayConfig = PBES_HOURS[dayOfWeek];
+
+      if (!dayConfig) {
+        if (hint) {
+          hint.textContent = '當日休息 (Closed)';
+          hint.className = 'text-[11px] font-extrabold text-red-600';
+        }
+        grid.innerHTML = `<div class="col-span-full text-center py-6 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-600">逢星期日及星期三為店舖休息日，請選擇其他日期。</div>`;
+        return;
+      }
+
+      if (hint) {
+        hint.textContent = dayConfig.label;
+        hint.className = 'text-[11px] font-extrabold text-emerald-700';
+      }
+
+      const duration = selectedBookingService.duration;
+      const dayBookings = existingBookings.filter(b => b.date === dateStr);
+      const slots = [];
+
+      for (let t = dayConfig.start; t + duration <= dayConfig.end; t += 15) {
+        const slotStart = t;
+        const slotEnd = t + duration;
+        const timeStr = bkMinToTime(slotStart);
+
+        const isConflict = dayBookings.some(b => {
+          const bStart = bkTimeToMin(b.start);
+          const bEnd = bkTimeToMin(b.end);
+          return slotStart < bEnd && slotEnd > bStart;
+        });
+
+        slots.push({ timeStr, isConflict });
+      }
+
+      grid.innerHTML = slots.map(slot => {
+        if (slot.isConflict) {
+          return `
+            <button type="button" disabled class="py-2 px-1 rounded-xl border border-slate-200 bg-slate-100 text-slate-400 text-xs font-bold line-through cursor-not-allowed">
+              ${slot.timeStr}
+            </button>
+          `;
+        }
+        const isSelected = selectedBookingTime === slot.timeStr;
+        return `
+          <button
+            type="button"
+            onclick="selectBookingTimeSlot('${slot.timeStr}')"
+            class="py-2 px-1 rounded-xl border-2 text-xs font-black transition ${
+              isSelected
+                ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                : 'border-slate-200 bg-white text-slate-800 hover:border-blue-400'
+            }"
+          >
+            ${slot.timeStr}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectBookingTimeSlot(timeStr) {
+      selectedBookingTime = timeStr;
+      renderAvailableTimeSlots();
+      updateBookingSummary();
+    }
+
+    function updateBookingSummary() {
+      const label = document.getElementById('bookingSummaryLabel');
+      const dateStr = document.getElementById('bookingDateInput').value;
+      if (!label) return;
+      if (!dateStr || !selectedBookingTime) {
+        label.textContent = `${selectedBookingService.name} · 請選擇日期及時間`;
+        return;
+      }
+      const endStr = bkMinToTime(bkTimeToMin(selectedBookingTime) + selectedBookingService.duration);
+      label.textContent = `${selectedBookingService.name} (${dateStr} ${selectedBookingTime}-${endStr})`;
+    }
+
+    async function submitBookingToGoogleSheet() {
+      const dateStr = document.getElementById('bookingDateInput').value;
+      const customerName = document.getElementById('bkCustName').value.trim();
+      const customerPhone = document.getElementById('bkCustPhone').value.trim();
+      const note = document.getElementById('bkCustNote').value.trim();
+
+      if (!dateStr || !selectedBookingTime) {
+        showToast('請先選擇預約日期及可用時段！', true);
+        return;
+      }
+      if (!customerName || !customerPhone) {
+        showToast('請填寫客戶姓名及聯絡電話！', true);
+        return;
+      }
+
+      const btn = document.getElementById('submitBookingBtn');
+      const origHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full"></span><span>正在寫入預約並發送通知...</span>`;
+
+      try {
+        const res = await fetch(BOOKING_APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            customerName,
+            customerPhone,
+            date: dateStr,
+            startTime: selectedBookingTime,
+            serviceName: selectedBookingService.name,
+            duration: selectedBookingService.duration,
+            price: selectedBookingService.price,
+            note
+          })
+        });
+
+        const result = await res.json();
+        if (result.status !== 'ok') {
+          throw new Error(result.message || '預約送出失敗');
+        }
+
+        const receipt = [
+          `PBES 專業保齡球服務預約確認`,
+          `預約編號：${result.bookingId}`,
+          `預約項目：${selectedBookingService.name} (${selectedBookingService.durationLabel})`,
+          `收費參考：${selectedBookingService.price}`,
+          `預約日期：${dateStr}`,
+          `預約時間：${selectedBookingTime} - ${result.endTime}`,
+          `客戶姓名：${customerName}`,
+          `聯絡電話：${customerPhone}`,
+          note ? `服務備註：${note}` : null
+        ].filter(Boolean).join('\n');
+
+        document.getElementById('bookingReceiptText').textContent = receipt;
+        document.getElementById('bookingSuccessCard').classList.remove('hidden');
+
+        const scrollBox = document.querySelector('#bookingDrawerOverlay .overflow-y-auto');
+        if (scrollBox) scrollBox.scrollTo({ top: 0, behavior: 'smooth' });
+
+        showToast(`預約成功！編號：${result.bookingId}`);
+        selectedBookingTime = '';
+        updateBookingSummary();
+        await fetchExistingBookings();
+
+      } catch (err) {
+        showToast(`預約失敗：${err.message}`, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    }
+
+    function resetBookingFormForNew() {
+      document.getElementById('bookingSuccessCard').classList.add('hidden');
+      selectedBookingTime = '';
+      updateBookingSummary();
     }
 
     // =========================================================================
